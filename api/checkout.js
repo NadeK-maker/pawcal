@@ -38,8 +38,7 @@ module.exports = async (req, res) => {
     locale: lang === 'fr' ? 'fr' : 'en',
     // On force la collecte de l'email : c'est l'identifiant qui permettra à
     // l'utilisateur de retrouver son abonnement sur un autre appareil.
-    customer_creation: 'always',
-    billing_address_collection: 'auto',
+        billing_address_collection: 'auto',
     subscription_data: { trial_period_days: trial > 0 ? trial : undefined },
     // Stripe facture et archive automatiquement chaque échéance (Billing + Invoicing).
     // Le client reçoit sa facture par email et la retrouve dans le portail.
