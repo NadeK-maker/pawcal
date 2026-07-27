@@ -167,6 +167,10 @@ a{color:var(--accent2)}
     <button class="btn ghost" onclick="setLang('en');go('s1')">🇬🇧 English</button>
   </div>
   <p class="small" style="text-align:center" id="t_disc">Prototype — ne remplace pas un vétérinaire.</p>
+  <p class="small" style="text-align:center;margin-top:6px">
+    <a href="terms.html" style="color:var(--faint)" id="t_lterms">Conditions</a> ·
+    <a href="privacy.html" style="color:var(--faint)" id="t_lpriv">Confidentialité</a> ·
+    <a href="refunds.html" style="color:var(--faint)" id="t_lref">Remboursements</a></p>
 </div>
 
 <!-- ========== 1. ESPÈCE ========== -->
@@ -345,7 +349,7 @@ a{color:var(--accent2)}
   <div id="pwErr"></div>
   <button class="btn" onclick="fakeBuy()" id="t_cta">Continuer</button>
   <button class="btn ghost sm" style="margin-top:8px" onclick="restorePurchase()" id="t_already">J'ai déjà un abonnement</button>
-  <p class="small" style="text-align:center;margin-top:10px" id="t_cancel">Annulable à tout moment. Paiement sécurisé par Stripe.</p>
+  <p class="small" style="text-align:center;margin-top:10px" id="t_cancel">Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.</p>
 </div>
 
 <!-- ========== RÉGLAGES / CLÉ API ========== -->
@@ -382,6 +386,11 @@ a{color:var(--accent2)}
     <button class="btn ghost sm" onclick="restorePurchase()" id="t_restore">Restaurer mon abonnement</button>
   </div>
   <button class="btn ghost sm" onclick="resetAll()" id="t_reset">Tout réinitialiser</button>
+  <p class="small" style="text-align:center;margin-top:10px">
+    <a href="terms.html" style="color:var(--faint)">Conditions</a> ·
+    <a href="privacy.html" style="color:var(--faint)">Confidentialité</a> ·
+    <a href="refunds.html" style="color:var(--faint)">Remboursements</a> ·
+    <a href="mailto:abdekdaher2@gmail.com" style="color:var(--faint)">Contact</a></p>
 </div>
 
 <!-- ========== NAV ========== -->
@@ -453,7 +462,7 @@ var T = {
  t_f5:["Alertes ingrédients toxiques","Toxic ingredient alerts"],
  t_pyr:["12 mois","12 months"], t_pyr2:["3,33 € / mois — 7 jours d'essai gratuit","€3.33 / month — 7-day free trial"],
  t_pmo:["1 mois","1 month"], t_pmo2:["Sans engagement","Cancel anytime"],
- t_cta:["Continuer","Continue"], t_cancel:["Annulable à tout moment. Paiement sécurisé par Stripe.","Cancel anytime. Secure payment by Stripe."],
+ t_cta:["Continuer","Continue"], t_cancel:["Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.","Cancel anytime. Secure payment by Paddle — receipt and invoice by email."],
  t_pwS2:["Passe en illimité pour continuer à scanner.","Go unlimited to keep scanning."],
  t_accT:["Compte","Account"],
  t_accHelp:["Ton email sert de compte : il retrouve ton abonnement sur n'importe quel appareil.","Your email is your account: it restores your subscription on any device."],
@@ -511,23 +520,85 @@ function pickPlan(p){S.plan=p;
   document.getElementById('p_year').className='plan'+(p==='year'?' sel':'');
   document.getElementById('p_mon').className='plan'+(p==='mon'?' sel':'');}
 
-/* ---- Paiement Stripe : l'app demande au serveur une session de paiement,
-       le serveur la crée avec la clé secrète, le navigateur part sur Stripe. ---- */
+/* ---- Paiement Paddle : le checkout s'ouvre en overlay dans la page.
+       Paddle est le marchand de référence : il encaisse, gère les taxes et
+       les factures, puis reverse. La clé secrète reste sur le serveur. ---- */
+var PADDLE_CFG=null, PADDLE_READY=false;
+function loadPaddle(){
+  return fetch('/api/config').then(function(r){return r.json();}).then(function(cfg){
+    PADDLE_CFG=cfg;
+    if(!cfg.configured) throw {notConfigured:true};
+    if(PADDLE_READY) return cfg;
+    return new Promise(function(resolve,reject){
+      var sc=document.createElement('script');
+      sc.src='https://cdn.paddle.com/paddle/v2/paddle.js';
+      sc.onload=function(){
+        try{
+          if(cfg.env!=='production') Paddle.Environment.set('sandbox');
+          Paddle.Initialize({token:cfg.token, eventCallback:onPaddleEvent});
+          PADDLE_READY=true; resolve(cfg);
+        }catch(e){reject(e);}
+      };
+      sc.onerror=function(){reject(new Error('paddle.js'));};
+      document.head.appendChild(sc);
+    });
+  });
+}
+function onPaddleEvent(ev){
+  if(ev && ev.name==='checkout.completed'){
+    try{
+      var em=ev.data && ev.data.customer && ev.data.customer.email;
+      if(em){S.email=String(em).toLowerCase();}
+    }catch(e){}
+    Paddle.Checkout.close();
+    afterPurchase();
+  }
+}
+/* Après paiement : on confirme auprès du serveur (source de vérité) avec
+   quelques tentatives, le temps que Paddle enregistre l'abonnement. */
+function afterPurchase(){
+  var fr=S.lang==='fr', tries=0;
+  function poll(){
+    tries++;
+    fetch('/api/status?email='+encodeURIComponent(S.email||''))
+      .then(function(r){return r.json();})
+      .then(function(j){
+        if(j.premium===true){
+          S.premium=true;S.lastCheck=Date.now();save();
+          alert(fr?'Merci ! Ton abonnement PawCal Premium est actif. Scans illimités.':'Thank you! Your PawCal Premium subscription is active.');
+          showHome();
+        } else if(tries<5){ setTimeout(poll,2500); }
+        else {
+          /* le paiement est passé mais la synchro tarde : on débloque,
+             la revalidation quotidienne confirmera. */
+          S.premium=true;save();showHome();
+        }
+      })
+      .catch(function(){ if(tries<5)setTimeout(poll,2500); });
+  }
+  poll();
+}
 function fakeBuy(){
   var fr=S.lang==='fr', b=document.getElementById('t_cta');
   if(!S.email){
     var em=prompt(fr?'Ton email (il sert de compte pour retrouver ton abonnement) :':'Your email (it is your account, used to restore your subscription):','');
     if(em&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em.trim())){S.email=em.trim().toLowerCase();save();}
+    else{return;}
   }
-  b.disabled=true; b.innerHTML='<span class="spin"></span>'+(fr?'Connexion à Stripe...':'Connecting to Stripe...');
-  fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({plan:S.plan,lang:S.lang,origin:location.origin,email:S.email||undefined})})
-  .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
-  .then(function(j){ if(j.url){location.href=j.url;} else throw new Error('no url'); })
-  .catch(function(e){
+  b.disabled=true; b.innerHTML='<span class="spin"></span>'+(fr?'Ouverture du paiement...':'Opening checkout...');
+  loadPaddle().then(function(cfg){
+    b.disabled=false; b.textContent=T.t_cta[L()];
+    Paddle.Checkout.open({
+      items:[{priceId: S.plan==='mon'?cfg.priceMonth:cfg.priceYear, quantity:1}],
+      customer:{email:S.email},
+      settings:{displayMode:'overlay', locale:S.lang==='fr'?'fr':'en', theme:'dark'}
+    });
+  }).catch(function(e){
     b.disabled=false; b.textContent=T.t_cta[L()];
     document.getElementById('pwErr').innerHTML='<div class="err">'+
-      (fr?'Paiement pas encore configuré ('+esc(e.message||'')+'). Regarde le guide Stripe.':'Payment not configured yet ('+esc(e.message||'')+'). See the Stripe guide.')+
+      (e&&e.notConfigured
+        ?(fr?'Le paiement sera bientôt disponible (configuration Paddle en cours).':'Payments coming soon (Paddle setup in progress).')
+        :(fr?'Paiement momentanément indisponible.':'Checkout temporarily unavailable.'))+
       '</div><button class="btn ghost sm" onclick="devUnlock()">'+(fr?'Débloquer en mode démo':'Unlock in demo mode')+'</button>';
   });
 }
@@ -590,23 +661,6 @@ function revalidate(){
       /* j.premium === null : Stripe injoignable, on ne touche à rien. */
     })
     .catch(function(){});
-}
-/* Au retour de Stripe : ?session_id=... → on vérifie côté serveur avant de débloquer. */
-function checkReturn(){
-  var m=location.search.match(/[?&]session_id=([^&]+)/); if(!m)return;
-  var fr=S.lang==='fr';
-  fetch('/api/verify?session_id='+encodeURIComponent(m[1]))
-    .then(function(r){return r.json();})
-    .then(function(j){
-      if(j.premium){S.premium=true; if(j.email)S.email=j.email; S.lastCheck=Date.now(); save();
-        alert((fr?'Merci ! Ton abonnement PawCal Premium est actif. Scans illimités.':'Thank you! Your PawCal Premium subscription is active. Unlimited scans.')+
-          (j.email?(fr?'\n\nNote bien cet email, il te sert à retrouver ton abonnement sur un autre téléphone : ':'\n\nRemember this email, it restores your subscription on another phone: ')+j.email:''));}
-    })
-    .catch(function(){})
-    .then(function(){
-      if(history.replaceState)history.replaceState({},'',location.pathname);
-      if(S.species)showHome();
-    });
 }
 
 /* ============ SÉLECTEURS ============ */
@@ -1094,7 +1148,6 @@ function resetAll(){
     document.getElementById('i_email').value=S.email||'';
     show('home'); navSel(1); renderHome();
   }
-  checkReturn();
   renderStrip();
   revalidate();
 })();
