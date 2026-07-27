@@ -265,6 +265,10 @@ a{color:var(--accent2)}
     <div class="stat"><b id="st_tgt">0</b><span id="t_target">Objectif</span></div>
     <div class="stat"><b id="st_w">—</b><span id="t_weight">Poids</span></div>
   </div>
+  <div id="upsell" class="card" style="display:none;cursor:pointer;background:linear-gradient(135deg,#2A1708,#20140E);border-color:#4A2B12" onclick="show('pw')">
+    <b style="font-size:15px">⭐ <span id="t_up1">Passe en illimité</span></b>
+    <div class="small" id="t_up2" style="margin-top:3px">Scans illimités, plusieurs animaux — 3,33 €/mois</div>
+  </div>
   <h2 style="margin:16px 0 8px" id="t_today">Aujourd'hui</h2>
   <div id="meals"></div>
   <p class="small" id="t_empty">Aucun repas enregistré. Appuie sur ＋ pour scanner la gamelle.</p>
@@ -348,6 +352,7 @@ a{color:var(--accent2)}
 <div class="scr" id="set">
   <div class="top"><h2 style="margin:0" id="t_setT">Réglages</h2>
     <button class="lang" onclick="showHome()">✕</button></div>
+  <div id="keyBlock" style="display:none">
   <div class="hint" id="t_keyHelp">
     Pour que l'IA fonctionne, colle ta clé Google Gemini (gratuite) :
     <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
@@ -357,13 +362,22 @@ a{color:var(--accent2)}
   <input id="i_key" placeholder="AIza..." autocomplete="off">
   <button class="btn sm" onclick="saveKey()" id="t_saveKey">Enregistrer</button>
   <div id="keyOk"></div>
+  </div>
   <div class="card" style="margin-top:16px">
     <h2 id="t_petT">L'animal</h2>
     <div class="small" id="o_pet"></div>
   </div>
   <div class="card" style="margin-top:16px">
+    <h2 id="t_accT">Compte</h2>
+    <p class="small" id="t_accHelp" style="margin-bottom:8px">Ton email sert de compte : il retrouve ton abonnement sur n'importe quel appareil.</p>
+    <input id="i_email" type="email" placeholder="ton@email.com" autocomplete="email" style="margin-bottom:8px">
+    <button class="btn ghost sm" onclick="saveEmail()" id="t_accSave">Enregistrer mon email</button>
+    <div id="accOk"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
     <h2 id="t_subT">Abonnement</h2>
     <div class="small" id="o_sub" style="margin-bottom:10px"></div>
+    <button class="btn sm" style="margin-bottom:8px" onclick="show('pw')" id="goPremium">⭐ Passer Premium — scans illimités</button>
     <button class="btn ghost sm" style="margin-bottom:8px" onclick="openPortal()" id="t_portal">Gérer mon abonnement et mes factures</button>
     <button class="btn ghost sm" onclick="restorePurchase()" id="t_restore">Restaurer mon abonnement</button>
   </div>
@@ -441,10 +455,16 @@ var T = {
  t_pmo:["1 mois","1 month"], t_pmo2:["Sans engagement","Cancel anytime"],
  t_cta:["Continuer","Continue"], t_cancel:["Annulable à tout moment. Paiement sécurisé par Stripe.","Cancel anytime. Secure payment by Stripe."],
  t_pwS2:["Passe en illimité pour continuer à scanner.","Go unlimited to keep scanning."],
+ t_accT:["Compte","Account"],
+ t_accHelp:["Ton email sert de compte : il retrouve ton abonnement sur n'importe quel appareil.","Your email is your account: it restores your subscription on any device."],
+ t_accSave:["Enregistrer mon email","Save my email"],
  t_subT:["Abonnement","Subscription"],
  t_portal:["Gérer mon abonnement et mes factures","Manage subscription and invoices"],
  t_restore:["Restaurer mon abonnement","Restore my subscription"],
  t_already:["J'ai déjà un abonnement","I already have a subscription"],
+ goPremium:["⭐ Passer Premium — scans illimités","⭐ Go Premium — unlimited scans"],
+ t_up1:["Passe en illimité","Go unlimited"],
+ t_up2:["Scans illimités, plusieurs animaux — 3,33 €/mois","Unlimited scans, multiple pets — €3.33/month"],
  t_setT:["Réglages","Settings"], t_saveKey:["Enregistrer","Save"], t_petT:["L'animal","The pet"],
  t_manT:["Ajout rapide sans photo","Quick add without photo"], t_manAdd:["Ajouter au journal","Add to log"],
  t_reset:["Tout réinitialiser","Reset everything"], t_n1:["Journal","Log"], t_n2:["Poids","Weight"],
@@ -495,6 +515,10 @@ function pickPlan(p){S.plan=p;
        le serveur la crée avec la clé secrète, le navigateur part sur Stripe. ---- */
 function fakeBuy(){
   var fr=S.lang==='fr', b=document.getElementById('t_cta');
+  if(!S.email){
+    var em=prompt(fr?'Ton email (il sert de compte pour retrouver ton abonnement) :':'Your email (it is your account, used to restore your subscription):','');
+    if(em&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em.trim())){S.email=em.trim().toLowerCase();save();}
+  }
   b.disabled=true; b.innerHTML='<span class="spin"></span>'+(fr?'Connexion à Stripe...':'Connecting to Stripe...');
   fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({plan:S.plan,lang:S.lang,origin:location.origin,email:S.email||undefined})})
@@ -508,6 +532,24 @@ function fakeBuy(){
   });
 }
 function devUnlock(){S.premium=true;save();showHome();}
+function saveEmail(){
+  var fr=S.lang==='fr';
+  var em=(document.getElementById('i_email').value||'').trim().toLowerCase();
+  if(!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){
+    document.getElementById('accOk').innerHTML='<div class="err">'+(fr?'Email invalide.':'Invalid email.')+'</div>';return;
+  }
+  S.email=em; save();
+  document.getElementById('accOk').innerHTML='<div class="badge ok">'+(fr?'Compte enregistré : ':'Account saved: ')+esc(em)+'</div>';
+  revalidateNow();
+}
+/* Vérifie immédiatement si cet email a déjà un abonnement (nouvel appareil). */
+function revalidateNow(){
+  if(!S.email)return;
+  fetch('/api/status?email='+encodeURIComponent(S.email))
+    .then(function(r){return r.json();})
+    .then(function(j){ if(j.premium===true){S.premium=true;S.lastCheck=Date.now();save();renderFreeLeft();renderSub();} })
+    .catch(function(){});
+}
 /* ---- Restaurer un abonnement sur un nouvel appareil (identifiant = email) ---- */
 function restorePurchase(){
   var fr=S.lang==='fr';
@@ -647,11 +689,13 @@ function renderHome(){
   }
   document.getElementById('meals').innerHTML=h;
   document.getElementById('t_empty').style.display=S.meals.length?'none':'block';
+  var up=document.getElementById('upsell'); if(up)up.style.display=S.premium?'none':'block';
   drawChart(); renderPet();
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function delMeal(i){S.meals.splice(i,1);save();renderHome();}
 function renderSub(){
+  var gp=document.getElementById('goPremium'); if(gp)gp.style.display=S.premium?'none':'block';
   var el=document.getElementById('o_sub'); if(!el)return;
   var fr=S.lang==='fr';
   el.innerHTML = S.premium
@@ -1042,10 +1086,12 @@ function resetAll(){
 
 /* ============ INIT ============ */
 (function init(){
+  if(location.protocol==='file:'){var kb=document.getElementById('keyBlock');if(kb)kb.style.display='block';}
   var had=restore();
   applyLang();
   if(had){
     document.getElementById('i_key').value=S.key||'';
+    document.getElementById('i_email').value=S.email||'';
     show('home'); navSel(1); renderHome();
   }
   checkReturn();
