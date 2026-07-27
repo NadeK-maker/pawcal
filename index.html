@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PawCal — Le compteur de calories de ton animal</title>
+<meta name="theme-color" content="#0E1116">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="PawCal">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23FFB020'/%3E%3Cstop offset='1' stop-color='%23FF6A3D'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cg fill='white'%3E%3Cellipse cx='32' cy='41' rx='12' ry='9.5'/%3E%3Ccircle cx='17' cy='27' r='5.5'/%3E%3Ccircle cx='27' cy='19.5' r='5.5'/%3E%3Ccircle cx='37' cy='19.5' r='5.5'/%3E%3Ccircle cx='47' cy='27' r='5.5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FF7A45'/%3E%3Cg fill='white'%3E%3Cellipse cx='32' cy='41' rx='12' ry='9.5'/%3E%3Ccircle cx='17' cy='27' r='5.5'/%3E%3Ccircle cx='27' cy='19.5' r='5.5'/%3E%3Ccircle cx='37' cy='19.5' r='5.5'/%3E%3Ccircle cx='47' cy='27' r='5.5'/%3E%3C/g%3E%3C/svg%3E">
+<style>
+:root{
+  --bg:#0E1116; --surface:#171B22; --surface2:#1F242D; --line:#2A313C;
+  --text:#F2F4F7; --muted:#98A2B3; --faint:#667085;
+  --accent:#FF7A45; --accent2:#FFB020; --ok:#12B76A; --warn:#F79009; --bad:#F04438;
+  --r:18px;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
+  -webkit-font-smoothing:antialiased}
+body{display:flex;justify-content:center;min-height:100vh}
+#phone{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;
+  display:flex;flex-direction:column;overflow:hidden}
+.scr{display:none;flex:1;flex-direction:column;padding:18px 18px 96px;animation:in .28s ease}
+.scr.on{display:flex}
+@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+h1{font-size:26px;line-height:1.15;margin:0 0 6px;letter-spacing:-.5px}
+h2{font-size:19px;margin:0 0 10px;letter-spacing:-.3px}
+p{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 14px}
+.small{font-size:12px;color:var(--faint)}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font-size:16px;font-weight:650;
+  background:linear-gradient(135deg,#FFB020,#FF6A3D);color:#160B04;cursor:pointer;font-family:inherit;
+  box-shadow:0 6px 18px #FF7A4533}
+.btn:active{transform:scale(.985)}
+.btn[disabled]{opacity:.45}
+.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:550}
+.btn.sm{padding:11px;font-size:14px}
+.row{display:flex;gap:8px}
+.row>*{flex:1}
+input,select{width:100%;background:var(--surface2);border:1px solid var(--line);color:var(--text);
+  border-radius:12px;padding:13px;font-size:16px;font-family:inherit;margin-bottom:10px}
+label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;font-weight:600;letter-spacing:.2px}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.chip{background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:10px 14px;
+  font-size:14px;cursor:pointer;transition:.15s}
+.chip.sel{background:linear-gradient(135deg,#FFB020,#FF6A3D);color:#160B04;border-color:transparent;font-weight:650}
+.logo64{width:84px;height:84px;border-radius:22px;box-shadow:0 14px 40px #FF7A4548,0 2px 0 #ffffff14 inset}
+.wordmark{font-size:38px;font-weight:800;letter-spacing:-1.5px;margin:14px 0 4px}
+.wordmark i{font-style:normal;background:linear-gradient(135deg,#FFB020,#FF6A3D);
+  -webkit-background-clip:text;background-clip:text;color:transparent}
+.miniLogo{width:34px;height:34px;border-radius:9px;flex:0 0 34px}
+#s0{background:radial-gradient(120% 55% at 50% -5%,#2A1708 0%,transparent 60%),var(--bg)}
+.big2{display:flex;gap:10px;margin-bottom:14px}
+.big2 div{flex:1;background:var(--surface2);border:2px solid var(--line);border-radius:16px;
+  padding:20px 10px;text-align:center;cursor:pointer;font-size:15px;font-weight:600}
+.big2 div.sel{border-color:var(--accent);background:#2A1A12}
+.big2 span{display:block;font-size:34px;margin-bottom:4px}
+/* nav */
+#nav{position:absolute;bottom:0;left:0;right:0;height:76px;background:#11151Bee;
+  backdrop-filter:blur(12px);border-top:1px solid var(--line);display:none;
+  align-items:center;justify-content:space-around;padding-bottom:8px}
+#nav.on{display:flex}
+.nb{background:none;border:0;color:var(--faint);font:inherit;font-size:10px;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:3px;width:70px}
+.nb b{font-size:21px;font-weight:400;line-height:1}
+.nb.on{color:var(--accent)}
+.fab{width:60px;height:60px;border-radius:50%;background:var(--accent);color:#160B04;border:0;
+  font-size:27px;margin-top:-26px;box-shadow:0 8px 22px #FF7A4555;cursor:pointer}
+/* ring */
+.ringwrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 2px}
+.ring{position:relative;width:210px;height:210px}
+.ring svg{transform:rotate(-90deg)}
+.ringtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ringtxt b{font-size:42px;letter-spacing:-1.5px;line-height:1}
+.ringtxt small{color:var(--muted);font-size:13px;margin-top:3px}
+.stats{display:flex;gap:8px;margin:14px 0 6px}
+.stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
+.stat b{display:block;font-size:17px;margin-bottom:2px}
+.stat span{font-size:11px;color:var(--faint)}
+/* meals */
+.meal{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);
+  border-radius:14px;padding:11px;margin-bottom:8px}
+.meal img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:var(--surface2)}
+.meal .m1{flex:1;min-width:0}
+.meal .m1 b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meal .m1 span{font-size:12px;color:var(--faint)}
+.meal .kc{font-size:15px;font-weight:700;color:var(--accent2)}
+.del{background:none;border:0;color:var(--faint);font-size:18px;cursor:pointer;padding:0 2px}
+/* scan */
+#drop{border:2px dashed var(--line);border-radius:var(--r);padding:34px 16px;text-align:center;
+  background:var(--surface);margin-bottom:12px;cursor:pointer}
+#drop.mini{padding:14px 16px}
+#drop.mini div:first-child{font-size:22px;display:inline-block;margin-right:8px}
+#drop.mini .small{display:none}
+#strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
+#strip:empty{display:none}
+.ph{position:relative;flex:0 0 84px;height:84px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.ph img{width:100%;height:100%;object-fit:cover;display:block}
+.ph button{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;
+  background:#000000cc;color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:0}
+.ph i{position:absolute;bottom:0;left:0;right:0;background:#000000aa;color:#fff;font-size:10px;
+  font-style:normal;text-align:center;padding:2px 0}
+/* macros */
+.macro{margin:10px 0 2px}
+.macro .ml{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
+.macro .mb{height:7px;border-radius:4px;background:var(--surface2);overflow:hidden;display:flex}
+.macro .mb u{display:block;height:100%;text-decoration:none}
+.kv{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-top:1px solid var(--line)}
+.kv b{white-space:nowrap;margin-left:10px}
+.sect{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);
+  font-weight:700;margin:14px 0 4px}
+.spin{width:20px;height:20px;border:2.5px solid #ffffff40;border-top-color:#160B04;border-radius:50%;
+  display:inline-block;vertical-align:-4px;margin-right:8px;animation:sp .7s linear infinite}
+@keyframes sp{to{transform:rotate(360deg)}}
+.badge{display:inline-block;font-size:11px;padding:4px 9px;border-radius:999px;background:var(--surface2);
+  color:var(--muted);margin:0 6px 6px 0}
+.badge.ok{background:#0B2E1F;color:#6CE9A6}
+.badge.warn{background:#3A2408;color:#FDB022}
+.badge.bad{background:#3B1211;color:#FDA29B}
+/* bcs */
+.bcsbar{display:flex;gap:3px;margin:10px 0}
+.bcsbar i{flex:1;height:8px;border-radius:3px;background:var(--surface2);font-style:normal}
+.bcsbar i.a{background:var(--accent)}
+/* paywall */
+#pw .plan{border:2px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;cursor:pointer;position:relative}
+#pw .plan.sel{border-color:var(--accent);background:#20140E}
+#pw .plan b{font-size:16px}
+#pw .plan .pr{float:right;font-weight:700}
+#pw .tag{position:absolute;top:-9px;right:12px;background:var(--accent);color:#160B04;font-size:10px;
+  font-weight:800;padding:3px 8px;border-radius:999px}
+.feat{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;font-size:14px}
+.feat b{color:var(--ok);font-size:15px}
+/* misc */
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.lang{background:var(--surface2);border:1px solid var(--line);color:var(--muted);border-radius:999px;
+  padding:6px 11px;font-size:12px;cursor:pointer;font-family:inherit}
+.err{background:#3B1211;border:1px solid #7A2622;color:#FDA29B;padding:11px;border-radius:12px;
+  font-size:13px;margin-bottom:10px}
+.hint{background:#12212E;border:1px solid #1D3A50;color:#84CAFF;padding:11px;border-radius:12px;
+  font-size:12.5px;line-height:1.5;margin-bottom:12px}
+a{color:var(--accent2)}
+</style>
+</head>
+<body>
+<div id="phone">
+
+<!-- ========== 0. LANGUE / SPLASH ========== -->
+<div class="scr on" id="s0">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;align-items:center">
+    <svg class="logo64" viewBox="0 0 64 64">
+      <defs><linearGradient id="pg1" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#FFB020"/><stop offset="1" stop-color="#FF6A3D"/></linearGradient></defs>
+      <rect width="64" height="64" rx="16" fill="url(#pg1)"/>
+      <g fill="#fff"><ellipse cx="32" cy="41" rx="12" ry="9.5"/><circle cx="17" cy="27" r="5.5"/>
+      <circle cx="27" cy="19.5" r="5.5"/><circle cx="37" cy="19.5" r="5.5"/><circle cx="47" cy="27" r="5.5"/></g>
+    </svg>
+    <div class="wordmark">Paw<i>Cal</i></div>
+    <p style="text-align:center" id="t_tag">Le compteur de calories de ton chien et ton chat.<br>Une photo. C'est tout.</p>
+  </div>
+  <div class="row" style="margin-bottom:10px">
+    <button class="btn" onclick="setLang('fr');go('s1')">🇫🇷 Français</button>
+    <button class="btn ghost" onclick="setLang('en');go('s1')">🇬🇧 English</button>
+  </div>
+  <p class="small" style="text-align:center" id="t_disc">Prototype — ne remplace pas un vétérinaire.</p>
+</div>
+
+<!-- ========== 1. ESPÈCE ========== -->
+<div class="scr" id="s1">
+  <div class="top"><span class="small" id="t_step1">Étape 1 / 4</span></div>
+  <h1 id="t_q1">Qui allons-nous suivre ?</h1>
+  <p id="t_q1s">La science nutritionnelle est différente pour le chien et pour le chat.</p>
+  <div class="big2">
+    <div id="sp_dog" onclick="pick('species','dog')"><span>🐕</span><i id="t_dog" style="font-style:normal">Chien</i></div>
+    <div id="sp_cat" onclick="pick('species','cat')"><span>🐈</span><i id="t_cat" style="font-style:normal">Chat</i></div>
+  </div>
+  <label id="t_name">Son prénom</label>
+  <input id="i_name" placeholder="Rex">
+  <div style="flex:1"></div>
+  <button class="btn" onclick="go('s2')" id="t_next1">Continuer</button>
+</div>
+
+<!-- ========== 2. PROFIL ========== -->
+<div class="scr" id="s2">
+  <div class="top"><span class="small" id="t_step2">Étape 2 / 4</span></div>
+  <h1 id="t_q2">Son profil</h1>
+  <div class="row">
+    <div><label id="t_w">Poids actuel (kg)</label><input id="i_w" type="number" step="0.1" placeholder="12.5" inputmode="decimal"></div>
+    <div><label id="t_age">Âge (ans)</label><input id="i_age" type="number" step="0.5" placeholder="4" inputmode="decimal"></div>
+  </div>
+  <label id="t_ster">Stérilisé / castré ?</label>
+  <div class="chips" id="c_ster">
+    <div class="chip" onclick="pick('ster','y',this)" id="t_yes">Oui</div>
+    <div class="chip" onclick="pick('ster','n',this)" id="t_no">Non</div>
+  </div>
+  <label id="t_act">Niveau d'activité</label>
+  <div class="chips" id="c_act">
+    <div class="chip" onclick="pick('act','low',this)" id="t_a1">Pantouflard</div>
+    <div class="chip" onclick="pick('act','norm',this)" id="t_a2">Normal</div>
+    <div class="chip" onclick="pick('act','high',this)" id="t_a3">Très actif</div>
+  </div>
+  <label id="t_goal">Objectif</label>
+  <div class="chips" id="c_goal">
+    <div class="chip" onclick="pick('goal','loss',this)" id="t_g1">Perdre du poids</div>
+    <div class="chip" onclick="pick('goal','keep',this)" id="t_g2">Maintenir</div>
+    <div class="chip" onclick="pick('goal','gain',this)" id="t_g3">Prendre du poids</div>
+  </div>
+  <div style="flex:1"></div>
+  <button class="btn" onclick="finishOnb()" id="t_next2">Calculer ses besoins</button>
+</div>
+
+<!-- ========== 3. RÉSULTAT ONBOARDING ========== -->
+<div class="scr" id="s3">
+  <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
+    <div style="text-align:center;font-size:56px">🎯</div>
+    <h1 style="text-align:center" id="t_res">Voici son objectif</h1>
+    <div class="card" style="text-align:center;padding:26px">
+      <div style="font-size:52px;font-weight:800;letter-spacing:-2px;color:var(--accent)" id="o_kcal">—</div>
+      <div class="small" id="t_perday">kcal par jour</div>
+      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
+      <div class="small" style="text-align:left;line-height:1.7" id="o_expl"></div>
+    </div>
+    <div class="hint" id="t_meth">Calcul basé sur les formules vétérinaires standards : <b>BER = 70 × poids<sup>0,75</sup></b>, puis facteur d'entretien selon l'espèce, la stérilisation, l'activité et l'objectif (NRC / WSAVA).</div>
+  </div>
+  <button class="btn" onclick="openApp()" id="t_start">C'est parti</button>
+</div>
+
+<!-- ========== HOME ========== -->
+<div class="scr" id="home">
+  <div class="top">
+    <div style="display:flex;align-items:center;gap:10px">
+      <svg class="miniLogo" viewBox="0 0 64 64">
+        <defs><linearGradient id="pg2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#FFB020"/><stop offset="1" stop-color="#FF6A3D"/></linearGradient></defs>
+        <rect width="64" height="64" rx="16" fill="url(#pg2)"/>
+        <g fill="#fff"><ellipse cx="32" cy="41" rx="12" ry="9.5"/><circle cx="17" cy="27" r="5.5"/>
+        <circle cx="27" cy="19.5" r="5.5"/><circle cx="37" cy="19.5" r="5.5"/><circle cx="47" cy="27" r="5.5"/></g>
+      </svg>
+      <div><h2 style="margin:0" id="h_hello">Salut 👋</h2><span class="small" id="h_date"></span></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="lang" onclick="toggleLang()" id="h_lang">EN</button>
+      <button class="lang" onclick="show('set')">⚙︎</button>
+    </div>
+  </div>
+  <div class="ringwrap">
+    <div class="ring">
+      <svg width="210" height="210">
+        <circle cx="105" cy="105" r="88" stroke="#242A34" stroke-width="16" fill="none"/>
+        <circle id="arc" cx="105" cy="105" r="88" stroke="url(#g)" stroke-width="16" fill="none"
+          stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="553"
+          style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"/>
+        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#FFB020"/><stop offset="1" stop-color="#FF7A45"/></linearGradient></defs>
+      </svg>
+      <div class="ringtxt"><b id="r_left">0</b><small id="t_left">kcal restantes</small></div>
+    </div>
+  </div>
+  <div class="stats">
+    <div class="stat"><b id="st_eat">0</b><span id="t_eaten">Consommé</span></div>
+    <div class="stat"><b id="st_tgt">0</b><span id="t_target">Objectif</span></div>
+    <div class="stat"><b id="st_w">—</b><span id="t_weight">Poids</span></div>
+  </div>
+  <h2 style="margin:16px 0 8px" id="t_today">Aujourd'hui</h2>
+  <div id="meals"></div>
+  <p class="small" id="t_empty">Aucun repas enregistré. Appuie sur ＋ pour scanner la gamelle.</p>
+</div>
+
+<!-- ========== SCAN ========== -->
+<div class="scr" id="scan">
+  <div class="top"><h2 style="margin:0" id="t_scanT">Scanner</h2>
+    <button class="lang" onclick="showHome()">✕</button></div>
+  <div class="chips" id="c_mode">
+    <div class="chip sel" onclick="pick('mode','bowl',this)" id="t_m1">🍲 La gamelle</div>
+    <div class="chip" onclick="pick('mode','label',this)" id="t_m2">🏷️ L'étiquette</div>
+    <div class="chip" onclick="pick('mode','bcs',this)" id="t_m3">📏 Sa silhouette</div>
+  </div>
+  <p id="t_modeHelp">Prends la gamelle en photo de dessus. L'IA identifie la nourriture et estime les calories.</p>
+  <div id="drop" onclick="document.getElementById('file').click()">
+    <div id="dropTxt"><div style="font-size:40px">📷</div><b id="t_take">Prendre une photo</b>
+      <div class="small" id="t_or">ou choisir dans la galerie</div></div>
+  </div>
+  <div id="strip"></div>
+  <input type="file" id="file" accept="image/*" capture="environment" multiple style="display:none" onchange="loadImg(event)">
+  <div id="freeLeft"></div>
+  <div id="scanErr"></div>
+  <div id="result"></div>
+  <div class="card">
+    <label id="t_manT" style="margin-bottom:8px">Ajout rapide sans photo</label>
+    <div class="row">
+      <input id="i_mName" placeholder="Friandise" style="margin:0">
+      <input id="i_mKcal" type="number" placeholder="kcal" inputmode="numeric" style="margin:0;flex:0 0 92px">
+    </div>
+    <button class="btn ghost sm" style="margin-top:8px" onclick="addManualMeal()" id="t_manAdd">Ajouter au journal</button>
+  </div>
+  <div style="flex:1"></div>
+  <button class="btn" id="analyzeBtn" onclick="analyze()" disabled>Analyser</button>
+</div>
+
+<!-- ========== POIDS ========== -->
+<div class="scr" id="wt">
+  <div class="top"><h2 style="margin:0" id="t_wT">Suivi du poids</h2>
+    <button class="lang" onclick="showHome()">✕</button></div>
+  <div class="card"><div id="chart"></div></div>
+  <div class="row" style="margin-bottom:12px">
+    <input id="i_newW" type="number" step="0.1" placeholder="kg" inputmode="decimal" style="margin:0">
+    <button class="btn sm" style="flex:0 0 110px" onclick="addWeight()" id="t_addW">Ajouter</button>
+  </div>
+  <div class="card">
+    <h2 id="t_proj">Projection</h2>
+    <p id="o_proj" style="margin:0"></p>
+  </div>
+</div>
+
+<!-- ========== PAYWALL ========== -->
+<div class="scr" id="pw">
+  <div class="top"><span></span><button class="lang" onclick="closePw()">✕</button></div>
+  <div style="text-align:center"><div style="font-size:50px">⭐️</div>
+    <h1 id="t_pwT">PawCal Premium</h1>
+    <p id="t_pwS">Tes 3 scans gratuits sont utilisés.</p></div>
+  <div class="card">
+    <div class="feat"><b>✓</b><span id="t_f1">Scans illimités de gamelles et d'étiquettes</span></div>
+    <div class="feat"><b>✓</b><span id="t_f2">Analyse de silhouette (score corporel) illimitée</span></div>
+    <div class="feat"><b>✓</b><span id="t_f3">Plusieurs animaux sur un seul compte</span></div>
+    <div class="feat"><b>✓</b><span id="t_f4">Rapport PDF à donner au vétérinaire</span></div>
+    <div class="feat"><b>✓</b><span id="t_f5">Alertes ingrédients toxiques</span></div>
+  </div>
+  <div class="plan sel" id="p_year" onclick="pickPlan('year')">
+    <span class="tag" id="t_save">-58%</span>
+    <b id="t_pyr">12 mois</b><span class="pr">39,99 €</span>
+    <div class="small" id="t_pyr2">3,33 € / mois — 7 jours d'essai gratuit</div>
+  </div>
+  <div class="plan" id="p_mon" onclick="pickPlan('mon')">
+    <b id="t_pmo">1 mois</b><span class="pr">7,99 €</span>
+    <div class="small" id="t_pmo2">Sans engagement</div>
+  </div>
+  <div id="pwErr"></div>
+  <button class="btn" onclick="fakeBuy()" id="t_cta">Continuer</button>
+  <button class="btn ghost sm" style="margin-top:8px" onclick="restorePurchase()" id="t_already">J'ai déjà un abonnement</button>
+  <p class="small" style="text-align:center;margin-top:10px" id="t_cancel">Annulable à tout moment. Paiement sécurisé par Stripe.</p>
+</div>
+
+<!-- ========== RÉGLAGES / CLÉ API ========== -->
+<div class="scr" id="set">
+  <div class="top"><h2 style="margin:0" id="t_setT">Réglages</h2>
+    <button class="lang" onclick="showHome()">✕</button></div>
+  <div class="hint" id="t_keyHelp">
+    Pour que l'IA fonctionne, colle ta clé Google Gemini (gratuite) :
+    <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
+    Elle reste dans cet onglet et n'est envoyée qu'à Google. En production, la clé vit sur ton serveur, jamais dans l'app.
+  </div>
+  <label>Google AI Studio API key</label>
+  <input id="i_key" placeholder="AIza..." autocomplete="off">
+  <button class="btn sm" onclick="saveKey()" id="t_saveKey">Enregistrer</button>
+  <div id="keyOk"></div>
+  <div class="card" style="margin-top:16px">
+    <h2 id="t_petT">L'animal</h2>
+    <div class="small" id="o_pet"></div>
+  </div>
+  <div class="card" style="margin-top:16px">
+    <h2 id="t_subT">Abonnement</h2>
+    <div class="small" id="o_sub" style="margin-bottom:10px"></div>
+    <button class="btn ghost sm" style="margin-bottom:8px" onclick="openPortal()" id="t_portal">Gérer mon abonnement et mes factures</button>
+    <button class="btn ghost sm" onclick="restorePurchase()" id="t_restore">Restaurer mon abonnement</button>
+  </div>
+  <button class="btn ghost sm" onclick="resetAll()" id="t_reset">Tout réinitialiser</button>
+</div>
+
+<!-- ========== NAV ========== -->
+<div id="nav">
+  <button class="nb on" id="n1" onclick="showHome()"><b>◎</b><span id="t_n1">Journal</span></button>
+  <button class="fab" onclick="showScan()">＋</button>
+  <button class="nb" id="n2" onclick="show('wt');navSel(2)"><b>◈</b><span id="t_n2">Poids</span></button>
+</div>
+
+</div>
+<script>
+/* ============ ÉTAT ============ */
+var S = {
+  lang:'fr', species:null, name:'', w:0, age:0, ster:null, act:'norm', goal:'keep',
+  target:0, meals:[], weights:[], scans:0, premium:false, mode:'bowl', plan:'year',
+  key:'', imgs:[], screen:'s0', day:'', idealW:0, email:'', lastCheck:0
+};
+var FREE_SCANS = 3;
+
+/* Sauvegarde tolérante : si le navigateur refuse le stockage, on continue en mémoire. */
+var Store = (function(){
+  var ok=false; try{var k='__pc';window.localStorage.setItem(k,'1');window.localStorage.removeItem(k);ok=true;}catch(e){ok=false;}
+  return {
+    on:ok,
+    get:function(){ if(!ok)return null; try{return JSON.parse(window.localStorage.getItem('pawcal')||'null');}catch(e){return null;} },
+    set:function(o){ if(!ok)return; try{window.localStorage.setItem('pawcal',JSON.stringify(o));}catch(e){} },
+    clear:function(){ if(!ok)return; try{window.localStorage.removeItem('pawcal');}catch(e){} }
+  };
+})();
+function save(){
+  Store.set({lang:S.lang,species:S.species,name:S.name,w:S.w,age:S.age,ster:S.ster,act:S.act,goal:S.goal,
+    idealW:S.idealW,target:S.target,meals:S.meals,weights:S.weights,scans:S.scans,premium:S.premium,key:S.key,email:S.email,lastCheck:S.lastCheck,day:today()});
+}
+function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
+function restore(){
+  var o=Store.get(); if(!o||!o.species)return false;
+  for(var k in o){ if(k!=='day') S[k]=o[k]; }
+  if(o.day!==today()) S.meals=[];          // le journal repart à zéro chaque jour
+  S.imgs=[]; return true;
+}
+
+/* ============ TRADUCTIONS ============ */
+var T = {
+ t_tag:["Le compteur de calories de ton chien et ton chat.<br>Une photo. C'est tout.","The calorie counter for your dog and cat.<br>One photo. That's it."],
+ t_disc:["Prototype — ne remplace pas un vétérinaire.","Prototype — not a substitute for a vet."],
+ t_step1:["Étape 1 / 3","Step 1 / 3"], t_step2:["Étape 2 / 3","Step 2 / 3"],
+ t_q1:["Qui allons-nous suivre ?","Who are we tracking?"],
+ t_q1s:["La science nutritionnelle est différente pour le chien et pour le chat.","Nutrition science is different for dogs and cats."],
+ t_dog:["Chien","Dog"], t_cat:["Chat","Cat"], t_name:["Son prénom","Their name"],
+ t_next1:["Continuer","Continue"], t_q2:["Son profil","Their profile"],
+ t_w:["Poids actuel (kg)","Current weight (kg)"], t_age:["Âge (ans)","Age (years)"],
+ t_ster:["Stérilisé / castré ?","Spayed / neutered?"], t_yes:["Oui","Yes"], t_no:["Non","No"],
+ t_act:["Niveau d'activité","Activity level"], t_a1:["Pantouflard","Couch potato"], t_a2:["Normal","Normal"], t_a3:["Très actif","Very active"],
+ t_goal:["Objectif","Goal"], t_g1:["Perdre du poids","Lose weight"], t_g2:["Maintenir","Maintain"], t_g3:["Prendre du poids","Gain weight"],
+ t_next2:["Calculer ses besoins","Calculate their needs"],
+ t_res:["Voici son objectif","Here's the target"], t_perday:["kcal par jour","kcal per day"],
+ t_meth:["Calcul basé sur les formules vétérinaires standards : <b>BER = 70 × poids<sup>0,75</sup></b>, puis facteur d'entretien selon l'espèce, la stérilisation, l'activité et l'objectif (NRC / WSAVA).","Based on standard veterinary formulas: <b>RER = 70 × weight<sup>0.75</sup></b>, then a maintenance factor for species, neutering, activity and goal (NRC / WSAVA)."],
+ t_start:["C'est parti","Let's go"],
+ t_left:["kcal restantes","kcal left"], t_eaten:["Consommé","Eaten"], t_target:["Objectif","Target"], t_weight:["Poids","Weight"],
+ t_today:["Aujourd'hui","Today"], t_empty:["Aucun repas enregistré. Appuie sur ＋ pour scanner la gamelle.","No meals yet. Tap ＋ to scan the bowl."],
+ t_scanT:["Scanner","Scan"], t_m1:["🍲 La gamelle","🍲 The bowl"], t_m2:["🏷️ L'étiquette","🏷️ The label"], t_m3:["📏 Sa silhouette","📏 Body shape"],
+ t_take:["Prendre une photo","Take a photo"], t_or:["ou choisir dans la galerie","or pick from your gallery"],
+ t_wT:["Suivi du poids","Weight tracking"], t_addW:["Ajouter","Add"], t_proj:["Projection","Projection"],
+ t_pwT:["PawCal Premium","PawCal Premium"], t_pwS:["Tes 3 scans gratuits sont utilisés.","You've used your 3 free scans."],
+ t_f1:["Scans illimités de gamelles et d'étiquettes","Unlimited bowl and label scans"],
+ t_f2:["Analyse de silhouette (score corporel) illimitée","Unlimited body-condition analysis"],
+ t_f3:["Plusieurs animaux sur un seul compte","Multiple pets on one account"],
+ t_f4:["Rapport PDF à donner au vétérinaire","PDF report for your vet"],
+ t_f5:["Alertes ingrédients toxiques","Toxic ingredient alerts"],
+ t_pyr:["12 mois","12 months"], t_pyr2:["3,33 € / mois — 7 jours d'essai gratuit","€3.33 / month — 7-day free trial"],
+ t_pmo:["1 mois","1 month"], t_pmo2:["Sans engagement","Cancel anytime"],
+ t_cta:["Continuer","Continue"], t_cancel:["Annulable à tout moment. Paiement sécurisé par Stripe.","Cancel anytime. Secure payment by Stripe."],
+ t_pwS2:["Passe en illimité pour continuer à scanner.","Go unlimited to keep scanning."],
+ t_subT:["Abonnement","Subscription"],
+ t_portal:["Gérer mon abonnement et mes factures","Manage subscription and invoices"],
+ t_restore:["Restaurer mon abonnement","Restore my subscription"],
+ t_already:["J'ai déjà un abonnement","I already have a subscription"],
+ t_setT:["Réglages","Settings"], t_saveKey:["Enregistrer","Save"], t_petT:["L'animal","The pet"],
+ t_manT:["Ajout rapide sans photo","Quick add without photo"], t_manAdd:["Ajouter au journal","Add to log"],
+ t_reset:["Tout réinitialiser","Reset everything"], t_n1:["Journal","Log"], t_n2:["Poids","Weight"],
+ t_keyHelp:["<b>Version en ligne (Vercel)</b> : rien à faire, la clé est déjà sur le serveur.<br><b>Fichier ouvert directement</b> : colle ta clé Google Gemini (gratuite) : <a href='https://aistudio.google.com/apikey' target='_blank'>aistudio.google.com/apikey</a>. Elle reste dans cet onglet et n'est envoyée qu'à Google.","<b>Online version (Vercel)</b>: nothing to do, the key already lives on the server.<br><b>File opened directly</b>: paste your free Google Gemini key: <a href='https://aistudio.google.com/apikey' target='_blank'>aistudio.google.com/apikey</a>. It stays in this tab and only goes to Google."]
+};
+var MODEHELP = {
+ bowl:["Prends la gamelle en photo de dessus. L'IA identifie la nourriture et estime les calories.","Photograph the bowl from above. The AI identifies the food and estimates calories."],
+ label:["Photographie le tableau nutritionnel du paquet. On calcule la ration exacte en grammes.","Photograph the nutrition panel on the bag. We compute the exact daily grams."],
+ bcs:["Photo de profil, debout, en entier. L'IA estime le score corporel de 1 à 9.","Full-body side photo, standing. The AI estimates body condition score from 1 to 9."]
+};
+function L(){return S.lang==='fr'?0:1}
+function applyLang(){
+  for(var k in T){var e=document.getElementById(k); if(e) e.innerHTML=T[k][L()];}
+  var mh=document.getElementById('t_modeHelp'); if(mh) mh.textContent=MODEHELP[S.mode][L()];
+  var mn=document.getElementById('i_mName'); if(mn) mn.placeholder=S.lang==='fr'?'Friandise':'Treat';
+  document.getElementById('h_lang').textContent = S.lang==='fr'?'EN':'FR';
+  document.documentElement.lang=S.lang;
+  if(S.name) document.getElementById('h_hello').textContent=(S.lang==='fr'?'Salut ':'Hey ')+S.name+' '+(S.species==='cat'?'🐈':'🐕');
+  renderHome(); renderPet();
+}
+function setLang(l){S.lang=l;applyLang();save();}
+function toggleLang(){setLang(S.lang==='fr'?'en':'fr');}
+
+/* ============ NAVIGATION ============ */
+function go(id){show(id);}
+function show(id){
+  var a=document.querySelectorAll('.scr'); for(var i=0;i<a.length;i++)a[i].classList.remove('on');
+  document.getElementById(id).classList.add('on'); S.screen=id;
+  var inApp=['home','scan','wt','set','pw'].indexOf(id)>=0;
+  document.getElementById('nav').className=inApp&&id!=='pw'?'on':'';
+  window.scrollTo(0,0);
+}
+function navSel(n){document.getElementById('n1').className='nb'+(n===1?' on':'');
+  document.getElementById('n2').className='nb'+(n===2?' on':'');}
+function showHome(){show('home');navSel(1);renderHome();}
+function showScan(){
+  if(!S.premium && S.scans>=FREE_SCANS){show('pw');return;}
+  document.getElementById('result').innerHTML='';document.getElementById('scanErr').innerHTML='';
+  show('scan');navSel(0);renderStrip();
+}
+function openApp(){show('home');navSel(1);renderHome();}
+function closePw(){show(S.meals.length||true?'home':'home');navSel(1);}
+function pickPlan(p){S.plan=p;
+  document.getElementById('p_year').className='plan'+(p==='year'?' sel':'');
+  document.getElementById('p_mon').className='plan'+(p==='mon'?' sel':'');}
+
+/* ---- Paiement Stripe : l'app demande au serveur une session de paiement,
+       le serveur la crée avec la clé secrète, le navigateur part sur Stripe. ---- */
+function fakeBuy(){
+  var fr=S.lang==='fr', b=document.getElementById('t_cta');
+  b.disabled=true; b.innerHTML='<span class="spin"></span>'+(fr?'Connexion à Stripe...':'Connecting to Stripe...');
+  fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({plan:S.plan,lang:S.lang,origin:location.origin,email:S.email||undefined})})
+  .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
+  .then(function(j){ if(j.url){location.href=j.url;} else throw new Error('no url'); })
+  .catch(function(e){
+    b.disabled=false; b.textContent=T.t_cta[L()];
+    document.getElementById('pwErr').innerHTML='<div class="err">'+
+      (fr?'Paiement pas encore configuré ('+esc(e.message||'')+'). Regarde le guide Stripe.':'Payment not configured yet ('+esc(e.message||'')+'). See the Stripe guide.')+
+      '</div><button class="btn ghost sm" onclick="devUnlock()">'+(fr?'Débloquer en mode démo':'Unlock in demo mode')+'</button>';
+  });
+}
+function devUnlock(){S.premium=true;save();showHome();}
+/* ---- Restaurer un abonnement sur un nouvel appareil (identifiant = email) ---- */
+function restorePurchase(){
+  var fr=S.lang==='fr';
+  var em=prompt(fr?'Email utilisé lors du paiement :':'Email used at checkout:', S.email||'');
+  if(!em)return;
+  em=em.trim().toLowerCase();
+  fetch('/api/status?email='+encodeURIComponent(em))
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j.premium){S.email=em;S.premium=true;S.lastCheck=Date.now();save();
+        alert(fr?'Abonnement retrouvé. Scans illimités réactivés.':'Subscription restored. Unlimited scans re-enabled.');
+        showHome();}
+      else alert(fr?'Aucun abonnement actif trouvé pour cet email.':'No active subscription found for this email.');
+    })
+    .catch(function(){alert(fr?'Impossible de vérifier pour le moment.':'Cannot verify right now.');});
+}
+/* ---- Portail Stripe : factures, carte, annulation, changement de plan ---- */
+function openPortal(){
+  var fr=S.lang==='fr';
+  var em=S.email||prompt(fr?'Email de ton abonnement :':'Your subscription email:','');
+  if(!em)return;
+  fetch('/api/portal',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email:em.trim().toLowerCase(),origin:location.origin})})
+  .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||'');return j;});})
+  .then(function(j){location.href=j.url;})
+  .catch(function(e){alert((fr?'Portail indisponible : ':'Portal unavailable: ')+(e.message||''));});
+}
+/* ---- Revalidation : une fois par jour, Stripe reste la source de vérité.
+       Si le client a annulé, l'accès se referme tout seul. ---- */
+function revalidate(){
+  if(!S.premium||!S.email)return;
+  if(Date.now()-(S.lastCheck||0) < 864e5)return;
+  fetch('/api/status?email='+encodeURIComponent(S.email))
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j.premium===false){S.premium=false;save();renderFreeLeft();}
+      else if(j.premium===true){S.lastCheck=Date.now();save();}
+      /* j.premium === null : Stripe injoignable, on ne touche à rien. */
+    })
+    .catch(function(){});
+}
+/* Au retour de Stripe : ?session_id=... → on vérifie côté serveur avant de débloquer. */
+function checkReturn(){
+  var m=location.search.match(/[?&]session_id=([^&]+)/); if(!m)return;
+  var fr=S.lang==='fr';
+  fetch('/api/verify?session_id='+encodeURIComponent(m[1]))
+    .then(function(r){return r.json();})
+    .then(function(j){
+      if(j.premium){S.premium=true; if(j.email)S.email=j.email; S.lastCheck=Date.now(); save();
+        alert((fr?'Merci ! Ton abonnement PawCal Premium est actif. Scans illimités.':'Thank you! Your PawCal Premium subscription is active. Unlimited scans.')+
+          (j.email?(fr?'\n\nNote bien cet email, il te sert à retrouver ton abonnement sur un autre téléphone : ':'\n\nRemember this email, it restores your subscription on another phone: ')+j.email:''));}
+    })
+    .catch(function(){})
+    .then(function(){
+      if(history.replaceState)history.replaceState({},'',location.pathname);
+      if(S.species)showHome();
+    });
+}
+
+/* ============ SÉLECTEURS ============ */
+function pick(field,val,el){
+  S[field]=val;
+  if(field==='species'){
+    document.getElementById('sp_dog').className=val==='dog'?'sel':'';
+    document.getElementById('sp_cat').className=val==='cat'?'sel':'';
+  } else if(el){
+    var p=el.parentNode.children;for(var i=0;i<p.length;i++)p[i].className='chip';
+    el.className='chip sel';
+  }
+  if(field==='mode'){document.getElementById('t_modeHelp').textContent=MODEHELP[val][L()];
+    document.getElementById('result').innerHTML='';}
+}
+
+/* ============ MOTEUR NUTRITIONNEL (formules vétérinaires réelles) ============ */
+function rer(kg){return 70*Math.pow(kg,0.75);}          // Resting Energy Requirement
+function factor(){
+  var f;
+  if(S.species==='cat'){
+    f = S.ster==='y'?1.2:1.4;
+    if(S.act==='low')f-=0.2; if(S.act==='high')f+=0.2;
+    if(S.age<1)f=2.5; if(S.age>=11)f-=0.1;
+  }else{
+    f = S.ster==='y'?1.6:1.8;
+    if(S.act==='low')f-=0.2; if(S.act==='high')f+=0.4;
+    if(S.age<1)f=2.5; if(S.age>=8)f-=0.2;
+  }
+  if(S.goal==='loss')f=(S.species==='cat'?0.8:1.0);
+  if(S.goal==='gain')f+=0.3;
+  return Math.max(0.7,f);
+}
+/* En perte de poids, la référence vétérinaire est le poids IDÉAL, pas le poids actuel. */
+function computeTarget(){
+  var base=(S.goal==='loss'&&S.idealW)?S.idealW:S.w;
+  S.target=Math.round(rer(base)*factor());
+  return S.target;
+}
+function finishOnb(){
+  S.name=(document.getElementById('i_name').value||'').trim()||(S.lang==='fr'?'Mon animal':'My pet');
+  S.w=parseFloat(document.getElementById('i_w').value)||0;
+  S.age=parseFloat(document.getElementById('i_age').value)||3;
+  if(!S.species){alert(S.lang==='fr'?'Choisis chien ou chat.':'Pick dog or cat.');return show('s1');}
+  if(!S.w){alert(S.lang==='fr'?'Indique son poids.':'Enter their weight.');return;}
+  if(!S.ster)S.ster='y';
+  computeTarget();
+  S.weights=[{d:Date.now(),kg:S.w}];
+  save();
+  document.getElementById('o_kcal').textContent=S.target;
+  var r=Math.round(rer(S.w)), f=factor().toFixed(2);
+  var fr=S.lang==='fr';
+  document.getElementById('o_expl').innerHTML=
+    (fr?'Métabolisme de base : ':'Resting need: ')+'<b>'+r+' kcal</b><br>'+
+    (fr?'Facteur d\'entretien : ':'Maintenance factor: ')+'<b>×'+f+'</b><br>'+
+    (fr?'Espèce : ':'Species: ')+(S.species==='dog'?(fr?'chien':'dog'):(fr?'chat':'cat'))+' · '+
+    (fr?'stérilisé : ':'neutered: ')+(S.ster==='y'?(fr?'oui':'yes'):(fr?'non':'no'))+'<br>'+
+    (fr?'Objectif : ':'Goal: ')+(S.goal==='loss'?(fr?'perte de poids progressive':'gradual weight loss'):S.goal==='gain'?(fr?'prise de poids':'weight gain'):(fr?'maintien':'maintenance'));
+  applyLang(); show('s3');
+}
+
+/* ============ RENDU ============ */
+function eaten(){var t=0;for(var i=0;i<S.meals.length;i++)t+=S.meals[i].kcal;return Math.round(t);}
+function renderHome(){
+  if(!S.target)return;
+  var e=eaten(), left=Math.max(0,S.target-e), pct=Math.min(1,e/S.target);
+  document.getElementById('r_left').textContent=left;
+  document.getElementById('arc').setAttribute('stroke-dashoffset',553-553*pct);
+  document.getElementById('st_eat').textContent=e;
+  document.getElementById('st_tgt').textContent=S.target;
+  document.getElementById('st_w').textContent=S.w?S.w+' kg':'—';
+  var d=new Date();
+  document.getElementById('h_date').textContent=d.toLocaleDateString(S.lang==='fr'?'fr-FR':'en-US',{weekday:'long',day:'numeric',month:'long'});
+  var h='';
+  for(var i=0;i<S.meals.length;i++){var m=S.meals[i];
+    h+='<div class="meal">'+(m.img?'<img src="'+m.img+'">':'<div style="width:48px;height:48px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px">🍽️</div>')+
+      '<div class="m1"><b>'+esc(m.title)+'</b><span>'+esc(m.detail||'')+'</span></div>'+
+      '<div class="kc">'+Math.round(m.kcal)+'</div>'+
+      '<button class="del" onclick="delMeal('+i+')">✕</button></div>';
+  }
+  document.getElementById('meals').innerHTML=h;
+  document.getElementById('t_empty').style.display=S.meals.length?'none':'block';
+  drawChart(); renderPet();
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function delMeal(i){S.meals.splice(i,1);save();renderHome();}
+function renderSub(){
+  var el=document.getElementById('o_sub'); if(!el)return;
+  var fr=S.lang==='fr';
+  el.innerHTML = S.premium
+    ? '<span class="badge ok">'+(fr?'Premium actif':'Premium active')+'</span>'+(S.email?'<br>'+esc(S.email):'')
+    : (fr?'Gratuit — '+Math.max(0,FREE_SCANS-S.scans)+' scan(s) restant(s)':'Free — '+Math.max(0,FREE_SCANS-S.scans)+' scan(s) left');
+}
+function renderPet(){
+  renderSub();
+  var el=document.getElementById('o_pet'); if(!el||!S.name)return;
+  var fr=S.lang==='fr';
+  el.innerHTML=S.name+' · '+(S.species==='dog'?(fr?'chien':'dog'):(fr?'chat':'cat'))+' · '+S.w+' kg · '+S.age+(fr?' ans':' y')+'<br>'+
+    (fr?'Objectif : ':'Target: ')+S.target+' kcal/'+(fr?'jour':'day');
+}
+
+/* ============ POIDS + GRAPHIQUE ============ */
+function addWeight(){
+  var v=parseFloat(document.getElementById('i_newW').value);
+  if(!v)return; S.weights.push({d:Date.now(),kg:v}); S.w=v; computeTarget();
+  document.getElementById('i_newW').value=''; save(); drawChart(); renderHome();
+}
+function drawChart(){
+  var c=document.getElementById('chart'); if(!c)return;
+  var W=S.weights; var fr=S.lang==='fr';
+  if(W.length<2){c.innerHTML='<p class="small" style="margin:0">'+(fr?'Ajoute une deuxième pesée pour voir la courbe. Une pesée par semaine suffit.':'Add a second weigh-in to see the curve. Once a week is enough.')+'</p>';}
+  else{
+    var vals=W.map(function(x){return x.kg;});
+    var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);
+    if(mx-mn<0.5){mn-=0.5;mx+=0.5;}
+    var w=340,h=110,p=8,pts=[];
+    for(var i=0;i<W.length;i++){
+      var x=p+(w-2*p)*(W.length===1?0:i/(W.length-1));
+      var y=h-p-(h-2*p)*((W[i].kg-mn)/(mx-mn));
+      pts.push(x.toFixed(1)+','+y.toFixed(1));
+    }
+    c.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:110px;overflow:visible">'+
+      '<polyline points="'+pts.join(' ')+'" fill="none" stroke="#FF7A45" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+
+      pts.map(function(pt){var a=pt.split(',');return '<circle cx="'+a[0]+'" cy="'+a[1]+'" r="3.5" fill="#FF7A45"/>';}).join('')+
+      '</svg><div class="small" style="display:flex;justify-content:space-between;margin-top:6px">'+
+      '<span>'+vals[0]+' kg</span><span>'+vals[vals.length-1]+' kg</span></div>';
+  }
+  var pr=document.getElementById('o_proj');
+  if(pr){
+    var deficit = S.goal==='loss' ? Math.round(rer(S.w)*(S.species==='cat'?1.0:1.6)) - S.target : 0;
+    if(S.goal==='loss'&&deficit>0){
+      var perWeek=(S.species==='cat'?0.005:0.01)*S.w;
+      pr.innerHTML=(fr?'À ce rythme, une perte saine est de <b>':'At a healthy pace, expect <b>')+
+        perWeek.toFixed(2)+(fr?' kg par semaine</b> (1 % du poids max pour un chien, 0,5 % pour un chat). Perdre plus vite est dangereux, surtout chez le chat (lipidose hépatique).':' kg per week</b> (max 1% of body weight for dogs, 0.5% for cats). Faster is dangerous, especially in cats (hepatic lipidosis).');
+    } else {
+      pr.textContent=fr?'Objectif de maintien : le poids doit rester stable à ±5 %. Pèse-le une fois par semaine, toujours le même jour.':'Maintenance: weight should stay within ±5%. Weigh once a week, same day each week.';
+    }
+  }
+}
+
+/* ============ IMAGES (plusieurs photos par analyse) ============ */
+var MAX_PHOTOS=4;
+function loadImg(ev){
+  var files=[].slice.call(ev.target.files||[]); if(!files.length)return;
+  var fr=S.lang==='fr';
+  if(S.imgs.length+files.length>MAX_PHOTOS){
+    files=files.slice(0,Math.max(0,MAX_PHOTOS-S.imgs.length));
+    document.getElementById('scanErr').innerHTML='<div class="err">'+(fr?'4 photos maximum par analyse.':'4 photos max per analysis.')+'</div>';
+  }
+  var pending=files.length;
+  files.forEach(function(f){
+    var r=new FileReader();
+    r.onload=function(e){
+      var img=new Image();
+      img.onload=function(){
+        var mx=900,sc=Math.min(1,mx/Math.max(img.width,img.height));
+        var cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
+        cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
+        S.imgs.push({data:cv.toDataURL('image/jpeg',0.8).split(',')[1],mime:'image/jpeg'});
+        if(--pending===0) renderStrip();
+      };
+      img.onerror=function(){ if(--pending===0) renderStrip(); };
+      img.src=e.target.result;
+    };
+    r.readAsDataURL(f);
+  });
+  ev.target.value='';
+}
+function renderStrip(){
+  var fr=S.lang==='fr', h='';
+  for(var i=0;i<S.imgs.length;i++){
+    h+='<div class="ph"><img src="data:'+S.imgs[i].mime+';base64,'+S.imgs[i].data+'">'+
+       '<button onclick="delImg('+i+')" title="'+(fr?'Supprimer':'Delete')+'">✕</button>'+
+       '<i>'+(i+1)+'</i></div>';
+  }
+  document.getElementById('strip').innerHTML=h;
+  var d=document.getElementById('drop'), t=document.getElementById('t_take');
+  if(S.imgs.length){
+    d.className='mini';
+    t.textContent=S.imgs.length>=MAX_PHOTOS?(fr?'Maximum atteint':'Maximum reached'):(fr?'Ajouter une autre photo':'Add another photo');
+    d.style.pointerEvents=S.imgs.length>=MAX_PHOTOS?'none':'auto';
+    d.style.opacity=S.imgs.length>=MAX_PHOTOS?'.5':'1';
+  } else {
+    d.className=''; d.style.pointerEvents='auto'; d.style.opacity='1';
+    t.textContent=T.t_take[L()];
+  }
+  document.getElementById('analyzeBtn').disabled=!S.imgs.length;
+  renderFreeLeft();
+}
+function delImg(i){S.imgs.splice(i,1);renderStrip();}
+function clearImgs(){S.imgs=[];renderStrip();document.getElementById('result').innerHTML='';}
+function renderFreeLeft(){
+  var el=document.getElementById('freeLeft'); if(!el)return;
+  var fr=S.lang==='fr';
+  if(S.premium){el.innerHTML='<div class="badge ok">'+(fr?'Premium — scans illimités':'Premium — unlimited scans')+'</div>';return;}
+  var left=Math.max(0,FREE_SCANS-S.scans);
+  el.innerHTML='<div class="badge '+(left?'':'bad')+'">'+
+    (left?(fr?left+' scan'+(left>1?'s':'')+' gratuit'+(left>1?'s':'')+' restant'+(left>1?'s':''):left+' free scan'+(left>1?'s':'')+' left')
+        :(fr?'Scans gratuits épuisés':'Free scans used up'))+'</div>';
+}
+
+/* ============ APPEL IA ============ */
+function saveKey(){
+  S.key=document.getElementById('i_key').value.trim(); save();
+  document.getElementById('keyOk').innerHTML=S.key?'<div class="badge ok">'+(S.lang==='fr'?'Clé enregistrée pour cette session':'Key saved for this session')+'</div>':'';
+}
+function ctx(){
+  var fr=S.lang==='fr';
+  return "CONTEXT: pet = "+(S.species==='dog'?'dog':'cat')+", name "+S.name+", weight "+S.w+" kg, age "+S.age+
+    " years, "+(S.ster==='y'?'neutered':'intact')+", activity "+S.act+", goal "+S.goal+
+    ", daily energy target "+S.target+" kcal. There may be SEVERAL photos: they show the SAME subject from different angles "+
+    "or complementary parts (e.g. bowl + package). Combine them into ONE single analysis, never repeat an item twice. "+
+    "Language for ALL human-readable text: "+(fr?'French':'English')+". Be specific and concrete, never generic.";
+}
+var PROMPTS={
+ bowl:function(){return "You are a board-certified veterinary nutrition assistant. "+ctx()+
+   " TASK: identify every food item in the bowl, estimate each portion in grams and its calories. "+
+   "Energy densities to use: dry kibble 350-420 kcal/100g, wet/pâté 80-110 kcal/100g, cooked lean meat 150-250 kcal/100g, "+
+   "cheese 350 kcal/100g, commercial treats 300-400 kcal/100g, cooked rice 130 kcal/100g, plain vegetables 20-50 kcal/100g. "+
+   "Estimate macronutrients for the whole meal in grams. Judge whether the portion fits the daily target and say exactly how many "+
+   "grams to add or remove. Flag ingredients that are toxic or risky for this species (chocolate, onion, garlic, leek, grapes, raisins, "+
+   "xylitol, macadamia, cooked bones, avocado, alcohol, caffeine, excess salt) with a severity. "+
+   "Respond ONLY with JSON: {\"title\":\"short meal name\",\"items\":[{\"name\":\"\",\"grams\":0,\"kcal\":0,\"detail\":\"one short clause on what it is / its quality\"}],"+
+   "\"total_kcal\":0,\"macros\":{\"protein_g\":0,\"fat_g\":0,\"carbs_g\":0},\"portion_verdict\":\"too_little|correct|too_much\","+
+   "\"adjust_grams\":0,\"equivalent\":\"a vivid human comparison, e.g. 'l'équivalent de 2 hamburgers pour un adulte'\","+
+   "\"confidence\":\"low|medium|high\",\"confidence_reason\":\"why, one clause\","+
+   "\"warnings\":[{\"text\":\"\",\"severity\":\"info|warning|danger\"}],\"advice\":[\"2 to 3 short actionable sentences\"]}"+
+   " adjust_grams is negative to remove, positive to add, 0 if correct.";},
+ label:function(){return "You are a board-certified veterinary nutrition assistant. "+ctx()+
+   " TASK: read the pet food package panel(s). Extract energy density in kcal per 100 g (convert from kcal/kg or ME if needed; "+
+   "if absent, compute with modified Atwater: 3.5*protein% + 8.5*fat% + 3.5*NFE%, and say so in confidence_reason). "+
+   "Compute the exact daily grams for this pet's "+S.target+" kcal target, and grams per meal for 2 meals a day. "+
+   "Read the analytical constituents (protein, fat, fibre, ash, moisture) and the first 3 ingredients if visible. "+
+   "Judge the quality: named meat source first = good, unnamed 'meat derivatives' or high cereal content first = mediocre. "+
+   "If a pack weight is visible, compute how many days the pack lasts. "+
+   "Respond ONLY with JSON: {\"title\":\"brand + product if visible\",\"kcal_per_100g\":0,\"daily_grams\":0,\"grams_per_meal\":0,"+
+   "\"analytical\":{\"protein_pct\":0,\"fat_pct\":0,\"fibre_pct\":0,\"moisture_pct\":0},\"first_ingredients\":[\"\"],"+
+   "\"quality_verdict\":\"one short sentence on the quality of this food for this pet\",\"pack_days\":0,"+
+   "\"vs_label_recommendation\":\"how our number compares to the manufacturer's feeding chart, one clause\","+
+   "\"confidence\":\"low|medium|high\",\"confidence_reason\":\"one clause\","+
+   "\"warnings\":[{\"text\":\"\",\"severity\":\"info|warning|danger\"}],\"advice\":[\"2 to 3 short actionable sentences\"]}"+
+   " Use 0 for any numeric value you cannot read.";},
+ bcs:function(){return "You are a board-certified veterinary assistant. "+ctx()+
+   " TASK: estimate the Body Condition Score on the 9-point WSAVA scale (1=emaciated, 4-5=ideal, 9=obese) from the visible waist "+
+   "seen from above, the abdominal tuck seen from the side, and rib coverage. Say explicitly which views the photos give you and "+
+   "which are missing. Estimate ideal weight = current/(1+0.1*(BCS-5)) when BCS>5, or current*(1+0.1*(5-BCS)) when BCS<4. "+
+   "Compute kg to lose or gain, and the number of weeks at a safe rate (max 1%/week body weight for dogs, 0.5%/week for cats). "+
+   "Respond ONLY with JSON: {\"bcs\":5,\"label\":\"short label for this score\",\"ideal_weight_kg\":0,\"delta_kg\":0,\"weeks_needed\":0,"+
+   "\"observations\":[{\"criterion\":\"Taille vue de dessus|Sangle abdominale|Couverture des côtes\",\"finding\":\"what you see\","+
+   "\"status\":\"good|borderline|bad|not_visible\"}],\"confidence\":\"low|medium|high\",\"confidence_reason\":\"one clause\","+
+   "\"photo_tip\":\"how to take a better photo if a view is missing, else empty\","+
+   "\"advice\":[\"2 to 3 short actionable sentences\"]}"+
+   " delta_kg is negative if the pet must lose weight. Always include in advice that only a vet can confirm a body condition score.";}
+};
+function addManualMeal(){
+  var n=(document.getElementById('i_mName').value||'').trim();
+  var k=parseFloat(document.getElementById('i_mKcal').value);
+  if(!n||!k)return;
+  S.meals.push({title:n,kcal:k,detail:'',img:null});
+  document.getElementById('i_mName').value='';document.getElementById('i_mKcal').value='';
+  save();showHome();
+}
+function analyze(){
+  var fr=S.lang==='fr';
+  if(!S.imgs.length)return;
+  if(!S.premium&&S.scans>=FREE_SCANS){show('pw');return;}
+  var b=document.getElementById('analyzeBtn');
+  b.disabled=true;b.innerHTML='<span class="spin"></span>'+(fr?'Analyse en cours...':'Analyzing...');
+  document.getElementById('scanErr').innerHTML='';
+  callGemini(PROMPTS[S.mode]()).then(function(txt){
+    var j=parseJSON(txt);
+    if(!j)throw new Error('bad json');
+    S.scans++; save(); renderFreeLeft(); renderResult(j);
+  }).catch(function(e){
+    if(e&&e.needKey){
+      show('set');
+      document.getElementById('keyOk').innerHTML='<div class="err">'+(fr?'Colle d\'abord ta clé API ici (ou utilise la version en ligne où la clé est déjà sur le serveur).':'Paste your API key here first (or use the online version where the key lives on the server).')+'</div>';
+    } else {
+      document.getElementById('scanErr').innerHTML='<div class="err">'+(fr?'Échec de l\'analyse : ':'Analysis failed: ')+esc(e.message||'')+'</div>';
+    }
+  }).then(function(){
+    b.disabled=false;b.textContent=fr?'Analyser':'Analyze';
+  });
+}
+function parseJSON(t){
+  try{return JSON.parse(t);}catch(e){}
+  var m=t.match(/\{[\s\S]*\}/); if(m){try{return JSON.parse(m[0]);}catch(e){}}
+  return null;
+}
+function callProxy(prompt){
+  return fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({prompt:prompt,images:S.imgs})})
+  .then(function(r){
+    if(r.status===404||r.status===405)throw {noProxy:true};
+    return r.json().then(function(j){
+      if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
+      return j.text;
+    },function(){throw {noProxy:true};});
+  },function(){throw {noProxy:true};});
+}
+function callGemini(prompt){
+  return callProxy(prompt).catch(function(e){
+    if(e&&e.noProxy){
+      if(!S.key)throw {needKey:true};
+      return callDirect(prompt);
+    }
+    throw e;
+  });
+}
+function callDirect(prompt){
+  var models=['gemini-flash-latest','gemini-2.5-flash','gemini-1.5-flash'];
+  var i=0;
+  function attempt(){
+    var url='https://generativelanguage.googleapis.com/v1beta/models/'+models[i]+':generateContent';
+    var parts=[{text:prompt}];
+    for(var n=0;n<S.imgs.length;n++)parts.push({inline_data:{mime_type:S.imgs[n].mime,data:S.imgs[n].data}});
+    return fetch(url,{method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},
+      body:JSON.stringify({contents:[{parts:parts}],
+        generationConfig:{temperature:0.2,responseMimeType:'application/json'}})})
+    .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+    .then(function(res){
+      if(!res.ok){
+        var msg=(res.j&&res.j.error&&res.j.error.message)||'HTTP error';
+        if(i<models.length-1&&/not found|not supported|unsupported/i.test(msg)){i++;return attempt();}
+        throw new Error(msg);
+      }
+      var c=res.j.candidates&&res.j.candidates[0];
+      if(!c)throw new Error('empty response');
+      return c.content.parts.map(function(p){return p.text||'';}).join('');
+    });
+  }
+  return attempt();
+}
+
+/* ============ AFFICHAGE DU RÉSULTAT ============ */
+function confBadge(j){
+  var fr=S.lang==='fr';
+  var cls={low:'bad',medium:'warn',high:'ok'}[j.confidence]||'';
+  var txt={low:fr?'confiance faible':'low confidence',medium:fr?'confiance moyenne':'medium confidence',
+           high:fr?'confiance élevée':'high confidence'}[j.confidence];
+  if(!txt)return '';
+  return '<div class="badge '+cls+'" style="margin-top:8px">'+txt+
+    (j.confidence_reason?' — '+esc(j.confidence_reason):'')+'</div>';
+}
+function warnHtml(w){
+  if(!w||!w.length)return '';
+  var out='<div style="margin-top:10px">';
+  for(var i=0;i<w.length;i++){
+    var x=w[i]; if(!x)continue;
+    var txt=typeof x==='string'?x:x.text, sev=(typeof x==='object'&&x.severity)||'warning';
+    if(!txt)continue;
+    var cls=sev==='danger'?'bad':sev==='info'?'':'warn';
+    var ic=sev==='danger'?'⛔ ':sev==='info'?'ⓘ ':'⚠︎ ';
+    out+='<div class="badge '+cls+'">'+ic+esc(txt)+'</div>';
+  }
+  return out+'</div>';
+}
+function adviceHtml(a){
+  if(!a)return '';
+  var list=typeof a==='string'?[a]:a, out='<div class="sect">'+(S.lang==='fr'?'Que faire':'What to do')+'</div>';
+  for(var i=0;i<list.length;i++){ if(list[i]) out+='<div class="feat"><b>→</b><span>'+esc(list[i])+'</span></div>'; }
+  return out;
+}
+function macroHtml(m){
+  if(!m)return '';
+  var fr=S.lang==='fr', p=+m.protein_g||0, f=+m.fat_g||0, c=+m.carbs_g||0, tot=p+f+c;
+  if(!tot)return '';
+  var pc=function(v){return (100*v/tot).toFixed(0);};
+  return '<div class="sect">'+(fr?'Macronutriments':'Macros')+'</div>'+
+    '<div class="macro"><div class="ml"><span>'+(fr?'Protéines':'Protein')+' '+p.toFixed(0)+' g</span>'+
+      '<span>'+(fr?'Lipides':'Fat')+' '+f.toFixed(0)+' g</span><span>'+(fr?'Glucides':'Carbs')+' '+c.toFixed(0)+' g</span></div>'+
+    '<div class="mb"><u style="width:'+pc(p)+'%;background:#12B76A"></u><u style="width:'+pc(f)+'%;background:#FFB020"></u>'+
+      '<u style="width:'+pc(c)+'%;background:#7A5AF8"></u></div></div>';
+}
+function renderResult(j){
+  var fr=S.lang==='fr', h='';
+
+  /* ---------- SILHOUETTE ---------- */
+  if(S.mode==='bcs'){
+    var bcs=Math.round(j.bcs||5), bar='';
+    for(var i=1;i<=9;i++)bar+='<i class="'+(i<=bcs?'a':'')+'"></i>';
+    var verdict=j.label||(bcs<=3?(fr?'Trop maigre':'Underweight'):bcs<=5?(fr?'Poids idéal':'Ideal'):
+      bcs<=6?(fr?'Léger surpoids':'Slightly overweight'):(fr?'Surpoids':'Overweight'));
+    var obs='';
+    if(j.observations)for(var o=0;o<j.observations.length;o++){
+      var ob=j.observations[o];
+      var dot={good:'🟢',borderline:'🟡',bad:'🔴',not_visible:'⚪️'}[ob.status]||'•';
+      obs+='<div class="kv"><span>'+dot+' '+esc(ob.criterion||'')+'</span><b style="font-weight:400;color:var(--muted);white-space:normal;text-align:right">'+esc(ob.finding||'')+'</b></div>';
+    }
+    h='<div class="card"><h2>'+(fr?'Score corporel':'Body condition')+' : '+bcs+'/9</h2>'+
+      '<div class="bcsbar">'+bar+'</div>'+
+      '<div class="badge '+(bcs>=4&&bcs<=5?'ok':bcs<=6?'warn':'bad')+'">'+esc(verdict)+'</div>'+confBadge(j)+
+      (obs?'<div class="sect">'+(fr?'Ce que montrent les photos':'What the photos show')+'</div>'+obs:'')+
+      (j.ideal_weight_kg?'<div class="sect">'+(fr?'Objectif de poids':'Weight goal')+'</div>'+
+        '<div class="kv"><span>'+(fr?'Poids actuel':'Current weight')+'</span><b>'+S.w+' kg</b></div>'+
+        '<div class="kv"><span>'+(fr?'Poids idéal estimé':'Estimated ideal weight')+'</span><b style="color:var(--accent2)">'+(+j.ideal_weight_kg).toFixed(1)+' kg</b></div>'+
+        (j.delta_kg?'<div class="kv"><span>'+(fr?(+j.delta_kg<0?'À perdre':'À prendre'):(+j.delta_kg<0?'To lose':'To gain'))+'</span><b>'+Math.abs(+j.delta_kg).toFixed(1)+' kg</b></div>':'')+
+        (j.weeks_needed?'<div class="kv"><span>'+(fr?'Durée sûre estimée':'Safe timeframe')+'</span><b>'+Math.round(j.weeks_needed)+(fr?' semaines':' weeks')+'</b></div>':'')
+        :'')+
+      (j.photo_tip?'<div class="hint" style="margin-top:12px">📷 '+esc(j.photo_tip)+'</div>':'')+
+      adviceHtml(j.advice)+'</div>'+
+      (j.ideal_weight_kg?'<button class="btn sm" onclick="applyIdeal('+(+j.ideal_weight_kg)+')">'+
+        (fr?'Régler l\'objectif sur ce poids idéal':'Set target from this ideal weight')+'</button>':'');
+    document.getElementById('result').innerHTML=h;
+    return;
+  }
+
+  /* ---------- ÉTIQUETTE ---------- */
+  if(S.mode==='label'){
+    var g=Math.round(j.daily_grams||0), gm=Math.round(j.grams_per_meal||g/2);
+    var an=j.analytical||{}, ing='';
+    if(j.first_ingredients)for(var q=0;q<j.first_ingredients.length;q++){
+      if(j.first_ingredients[q])ing+='<div class="badge">'+(q+1)+'. '+esc(j.first_ingredients[q])+'</div>';
+    }
+    h='<div class="card"><h2>'+esc(j.title||'')+'</h2>'+
+      '<div style="font-size:42px;font-weight:800;color:var(--accent);letter-spacing:-1.5px">'+g+' g</div>'+
+      '<div class="small">'+(fr?'par jour — soit '+gm+' g matin et '+gm+' g soir':'per day — that is '+gm+' g morning and '+gm+' g evening')+'</div>'+
+      confBadge(j)+
+      '<div class="sect">'+(fr?'Ce qu\'on a lu sur le paquet':'What we read on the pack')+'</div>'+
+      '<div class="kv"><span>'+(fr?'Densité énergétique':'Energy density')+'</span><b>'+Math.round(j.kcal_per_100g||0)+' kcal / 100 g</b></div>'+
+      (an.protein_pct?'<div class="kv"><span>'+(fr?'Protéines':'Protein')+'</span><b>'+an.protein_pct+' %</b></div>':'')+
+      (an.fat_pct?'<div class="kv"><span>'+(fr?'Matières grasses':'Fat')+'</span><b>'+an.fat_pct+' %</b></div>':'')+
+      (an.fibre_pct?'<div class="kv"><span>'+(fr?'Fibres':'Fibre')+'</span><b>'+an.fibre_pct+' %</b></div>':'')+
+      (an.moisture_pct?'<div class="kv"><span>'+(fr?'Humidité':'Moisture')+'</span><b>'+an.moisture_pct+' %</b></div>':'')+
+      '<div class="kv"><span>'+(fr?'Objectif de '+S.name:'Target for '+S.name)+'</span><b>'+S.target+' kcal/'+(fr?'j':'d')+'</b></div>'+
+      (j.pack_days?'<div class="kv"><span>'+(fr?'Ce paquet dure':'This pack lasts')+'</span><b>'+Math.round(j.pack_days)+(fr?' jours':' days')+'</b></div>':'')+
+      (ing?'<div class="sect">'+(fr?'Premiers ingrédients':'First ingredients')+'</div>'+ing:'')+
+      (j.quality_verdict?'<div class="sect">'+(fr?'Verdict qualité':'Quality verdict')+'</div><p style="margin:0">'+esc(j.quality_verdict)+'</p>':'')+
+      (j.vs_label_recommendation?'<div class="hint" style="margin-top:12px">'+esc(j.vs_label_recommendation)+'</div>':'')+
+      warnHtml(j.warnings)+adviceHtml(j.advice)+'</div>'+
+      '<button class="btn sm" onclick="addMeal(\''+encodeURIComponent(j.title||'Ration')+'\','+(+j.total_kcal||S.target)+',\''+g+' g\')">'+
+        (fr?'Enregistrer la ration du jour':'Log today\'s ration')+'</button>';
+    document.getElementById('result').innerHTML=h;
+    return;
+  }
+
+  /* ---------- GAMELLE ---------- */
+  var kcal=Math.round(j.total_kcal||0);
+  var pct=S.target?Math.round(100*kcal/S.target):0;
+  var items='';
+  if(j.items)for(var k=0;k<j.items.length;k++){var it=j.items[k];
+    items+='<div class="kv"><span>'+esc(it.name)+(it.grams?' <span class="small">'+Math.round(it.grams)+' g</span>':'')+
+      (it.detail?'<br><span class="small">'+esc(it.detail)+'</span>':'')+'</span><b>'+Math.round(it.kcal||0)+' kcal</b></div>';}
+  var vcls={too_much:'bad',correct:'ok',too_little:'warn'}[j.portion_verdict]||'';
+  var vtxt={too_much:fr?'Portion trop grosse':'Portion too large',correct:fr?'Portion correcte':'Portion is right',
+            too_little:fr?'Portion trop petite':'Portion too small'}[j.portion_verdict]||'';
+  var adj=Math.round(j.adjust_grams||0);
+  h='<div class="card"><h2>'+esc(j.title||(fr?'Repas':'Meal'))+'</h2>'+
+    '<div style="font-size:42px;font-weight:800;color:var(--accent);letter-spacing:-1.5px">'+kcal+' kcal</div>'+
+    '<div class="small">'+pct+(fr?' % de son objectif quotidien ('+S.target+' kcal)':'% of the daily target ('+S.target+' kcal)')+'</div>'+
+    (vtxt?'<div class="badge '+vcls+'" style="margin-top:8px">'+vtxt+(adj?' — '+(adj<0?(fr?'retire ':'remove '):(fr?'ajoute ':'add '))+Math.abs(adj)+' g':'')+'</div>':'')+
+    confBadge(j)+
+    (items?'<div class="sect">'+(fr?'Détail de la gamelle':'Bowl breakdown')+'</div>'+items:'')+
+    macroHtml(j.macros)+
+    (j.equivalent?'<div class="hint" style="margin-top:12px">🍔 '+esc(j.equivalent)+'</div>':'')+
+    warnHtml(j.warnings)+adviceHtml(j.advice)+'</div>'+
+    '<button class="btn sm" onclick="addMeal(\''+encodeURIComponent(j.title||'Repas')+'\','+kcal+',\'\')">'+
+      (fr?'Ajouter au journal':'Add to log')+'</button>';
+  document.getElementById('result').innerHTML=h;
+}
+function applyIdeal(kg){
+  S.idealW=Math.round(kg*10)/10; S.goal='loss'; computeTarget(); save();
+  alert((S.lang==='fr'?'Objectif recalculé sur son poids idéal ('+S.idealW+' kg) : ':'Target recalculated from ideal weight ('+S.idealW+' kg): ')+S.target+' kcal/'+(S.lang==='fr'?'jour':'day'));
+  showHome();
+}
+function addMeal(title,kcal,detail){
+  S.meals.push({title:decodeURIComponent(title),kcal:+kcal||0,detail:detail,
+    img:S.imgs.length?('data:'+S.imgs[0].mime+';base64,'+S.imgs[0].data):null});
+  clearImgs(); save(); showHome();
+}
+function resetAll(){
+  if(!confirm(S.lang==='fr'?'Effacer le profil, le journal et l\'historique de poids ?':'Erase profile, log and weight history?'))return;
+  Store.clear(); location.href=location.pathname;
+}
+
+/* ============ INIT ============ */
+(function init(){
+  var had=restore();
+  applyLang();
+  if(had){
+    document.getElementById('i_key').value=S.key||'';
+    show('home'); navSel(1); renderHome();
+  }
+  checkReturn();
+  renderStrip();
+  revalidate();
+})();
+</script>
+</body>
+</html>
