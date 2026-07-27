@@ -9,7 +9,7 @@ const API = () =>
     : 'https://sandbox-api.paddle.com';
 
 async function paddle(path, opts = {}) {
-  const key = process.env.PADDLE_API_KEY;
+    const key = (process.env.PADDLE_API_KEY || '').trim();
   if (!key) throw new Error('PADDLE_API_KEY manquante sur le serveur');
   const r = await fetch(`${API()}${path}`, {
     method: opts.method || 'GET',
