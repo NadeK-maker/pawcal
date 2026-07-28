@@ -1,71 +1,96 @@
 <!DOCTYPE html>
-  <html lang="fr">
-  <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tarifs - PawCal</title>
-  <style>
-  body{max-width:720px;margin:0 auto;padding:32px 20px;background:#0E1116;color:#F2F4F7;
+<html lang="fr">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tarifs — PawCal</title>
+<style>
+body{max-width:720px;margin:0 auto;padding:32px 20px;background:#0E1116;color:#F2F4F7;
 font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;line-height:1.65}
-h1{font-size:28px;letter-spacing:-.5px;margin-bottom:6px}
-h2{font-size:18px;margin-top:28px}
-p,li{color:#98A2B3;font-size:15px}
-a{color:#FFB020}
-  .back{display:inline-block;margin-bottom:18px;color:#FF7A45;text-decoration:none;font-weight:600}
-.plans{display:flex;gap:14px;flex-wrap:wrap;margin:24px 0}
-.plan{flex:1;min-width:240px;background:#171B22;border:1px solid #2A313C;border-radius:18px;padding:22px}
-.plan.best{border-color:#FF7A45;background:#20140E}
-  .price{font-size:34px;font-weight:800;color:#FF7A45;letter-spacing:-1px}
-.per{color:#667085;font-size:13px}
-.tag{display:inline-block;background:#FF7A45;color:#160B04;font-size:11px;font-weight:800;
-padding:3px 9px;border-radius:999px;margin-bottom:8px}
-ul{padding-left:18px}
-.cta{display:inline-block;margin-top:14px;background:linear-gradient(135deg,#FFB020,#FF6A3D);
-  color:#160B04;font-weight:700;padding:12px 20px;border-radius:12px;text-decoration:none}
-.note{color:#667085;font-size:13px}
+h1{font-size:26px;letter-spacing:-.5px}h2{font-size:18px;margin-top:28px}
+p,li{color:#98A2B3;font-size:15px}a{color:#FFB020}
+.top{color:#667085;font-size:13px}
+.back{display:inline-block;margin-bottom:18px;color:#FF7A45;text-decoration:none;font-weight:600}
+.card{background:#151A21;border:1px solid #242B36;border-radius:16px;padding:18px 20px;margin:14px 0}
+.card h3{margin:0 0 4px;font-size:17px;color:#F2F4F7}
+.pr{font-size:26px;font-weight:800;color:#FF7A45;letter-spacing:-1px}
+.sub{color:#667085;font-size:13px;margin:2px 0 10px}
+.tag{display:inline-block;background:#2A1A12;color:#FFB020;border-radius:999px;
+padding:2px 10px;font-size:12px;font-weight:700;margin-left:8px}
+ul{margin:8px 0 0;padding-left:20px}
+.note{background:#1C1710;border:1px solid #3A2A12;border-radius:14px;padding:16px 18px;margin:20px 0}
+.note b{color:#FFB020}
 </style>
-  </head>
-  <body>
-  <a class="back" href="/">&larr; Retour a PawCal</a>
-  <h1>Tarifs</h1>
-  <p>Trois scans gratuits pour essayer. Ensuite, deux formules, sans engagement.</p>
+</head>
+<body>
+<a class="back" href="/">← Retour à PawCal</a>
+<h1>Tarifs</h1>
+<p class="top">Dernière mise à jour : 28 juillet 2026 · English summary at the bottom</p>
 
-  <div class="plans">
-    <div class="plan best">
-      <span class="tag">-58%</span>
-    <div class="price">39,99 &euro;</div>
-      <div class="per">par an &mdash; soit 3,33 &euro; / mois</div>
-      <ul>
-      <li>Scans illimites de gamelles et d'etiquettes</li>
-      <li>Analyse de silhouette (score corporel) illimitee</li>
-      <li>Plusieurs animaux sur un seul compte</li>
-      <li>Alertes ingredients toxiques</li>
-      <li>Suivi de poids et courbe de progression</li>
-    </ul>
-    </div>
-    <div class="plan">
-    <div class="price">7,99 &euro;</div>
-    <div class="per">par mois</div>
-    <ul>
-      <li>Toutes les fonctionnalites Premium</li>
-        <li>Sans engagement</li>
-      <li>Annulation a tout moment</li>
-    </ul>
-  </div>
+<p>Trois scans gratuits pour essayer. Ensuite, deux formules, sans engagement.</p>
+
+<div class="note">
+  <b>Les paiements ne sont pas encore ouverts.</b>
+  <p style="margin:6px 0 0">En attendant, l'accès complet est offert sur simple demande :
+  écris à <a href="mailto:pawcalpr@gmail.com">pawcalpr@gmail.com</a> et nous t'envoyons
+  un code d'accès à coller dans l'application.</p>
 </div>
 
-  <a class="cta" href="/">Essayer gratuitement</a>
+<div class="card">
+  <h3>Gratuit</h3>
+  <div class="pr">0 €</div>
+  <p class="sub">Sans carte bancaire</p>
+  <ul>
+    <li>3 scans (gamelle, étiquette ou silhouette)</li>
+    <li>Calcul de la ration quotidienne par les formules vétérinaires standards</li>
+    <li>3 questions à l'assistant IA spécialisé chiens et chats</li>
+    <li>Journal des repas et suivi du poids</li>
+  </ul>
+</div>
 
-<h2>Gratuit</h2>
-  <p>3 scans offerts, sans carte bancaire. Le calcul de la ration quotidienne selon les formules veterinaires est inclus.</p>
+<div class="card">
+  <h3>Premium — 12 mois <span class="tag">−58 %</span></h3>
+  <div class="pr">39,99 €</div>
+  <p class="sub">par an, soit 3,33 € par mois · 7 jours d'essai gratuit</p>
+  <ul>
+    <li>Scans illimités de gamelles et d'étiquettes</li>
+    <li>Analyse de silhouette (score corporel WSAVA) illimitée</li>
+    <li>Assistant IA illimité, spécialisé chiens et chats</li>
+    <li>Plusieurs animaux sur un seul compte</li>
+    <li>Rapport PDF à donner au vétérinaire</li>
+    <li>Alertes ingrédients toxiques</li>
+  </ul>
+</div>
+
+<div class="card">
+  <h3>Premium — 1 mois</h3>
+  <div class="pr">7,99 €</div>
+  <p class="sub">par mois, annulable à tout moment</p>
+  <ul><li>Toutes les fonctions Premium, sans engagement</li></ul>
+</div>
 
 <h2>Paiement et facturation</h2>
-<p>Les paiements sont traites par <b>Paddle</b>, notre revendeur officiel : c'est Paddle qui emet la facture, collecte les taxes applicables et apparait sur votre releve bancaire. Vous recevez votre recu par email apres chaque paiement.</p>
+<p>Les paiements sont traités par un prestataire de paiement sécurisé. Les données de carte
+ne transitent jamais par nos serveurs. Un reçu et une facture sont envoyés par email après
+chaque échéance.</p>
 
-<h2>Annulation et remboursement</h2>
-<p>Annulation a tout moment depuis l'application (Reglages &rarr; Gerer mon abonnement), avec effet a la fin de la periode payee. Remboursement integral possible dans les 14 jours suivant le premier paiement &mdash; voir notre <a href="/refunds.html">politique de remboursement</a>.</p>
+<h2>Annulation</h2>
+<p>L'annulation se fait à tout moment depuis Réglages → « Gérer mon abonnement ». L'accès
+reste actif jusqu'à la fin de la période déjà payée. Remboursement intégral possible dans
+les 14 jours suivant le premier paiement — voir la
+<a href="refunds.html">politique de remboursement</a>.</p>
 
-<p class="note">Prix TTC indicatifs en euros. Selon votre pays, le montant final peut varier avec les taxes locales appliquees par Paddle.</p>
+<h2>English summary</h2>
+<p>3 free scans and 3 free AI assistant questions, no card required. Premium is
+<b>€39.99 / year</b> (€3.33 per month, 7-day free trial) or <b>€7.99 / month</b>, cancel
+anytime. Unlimited scans, unlimited body-condition analysis, unlimited AI assistant,
+multiple pets, PDF vet report and toxic ingredient alerts. <b>Payments are not open yet</b> —
+email <a href="mailto:pawcalpr@gmail.com">pawcalpr@gmail.com</a> and we'll send you a free
+access code in the meantime.</p>
 
-<p class="note"><a href="/terms.html">Conditions</a> &middot; <a href="/privacy.html">Confidentialite</a> &middot; <a href="/refunds.html">Remboursements</a> &middot; <a href="mailto:abdekdaher2@gmail.com">Contact</a></p>
+<p class="top" style="margin-top:28px">
+<a href="terms.html">Conditions</a> ·
+<a href="privacy.html">Confidentialité</a> ·
+<a href="refunds.html">Remboursements</a> ·
+<a href="mailto:pawcalpr@gmail.com">Contact</a></p>
 </body>
 </html>

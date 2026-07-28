@@ -395,7 +395,7 @@ a{color:var(--accent2)}
   <div id="payOn">
     <button class="btn" onclick="fakeBuy()" id="t_cta">Continuer</button>
     <button class="btn ghost sm" style="margin-top:8px" onclick="restorePurchase()" id="t_already">J'ai déjà un abonnement</button>
-    <p class="small" style="text-align:center;margin-top:10px" id="t_cancel">Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.</p>
+    <p class="small" style="text-align:center;margin-top:10px" id="t_cancel">Annulable à tout moment. Paiement sécurisé — reçu et facture par email.</p>
   </div>
 </div>
 
@@ -437,7 +437,7 @@ a{color:var(--accent2)}
     <a href="terms.html" style="color:var(--faint)">Conditions</a> ·
     <a href="privacy.html" style="color:var(--faint)">Confidentialité</a> ·
     <a href="refunds.html" style="color:var(--faint)">Remboursements</a> ·
-    <a href="mailto:abdekdaher2@gmail.com" style="color:var(--faint)">Contact</a></p>
+    <a href="mailto:pawcalpr@gmail.com" style="color:var(--faint)">Contact</a></p>
 </div>
 
 <!-- ========== NAV ========== -->
@@ -526,7 +526,7 @@ var T = {
  t_offCode:["J'ai un code d'accès","I have an access code"],
  t_codeAsk:["Colle ton code d'accès :","Paste your access code:"],
  t_codeBad:["Code invalide.","Invalid code."],
- t_codeOk:["Accès complet activé. Merci !","Full access unlocked. Thank you!"], t_cancel:["Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.","Cancel anytime. Secure payment by Paddle — receipt and invoice by email."],
+ t_codeOk:["Accès complet activé. Merci !","Full access unlocked. Thank you!"], t_cancel:["Annulable à tout moment. Paiement sécurisé — reçu et facture par email.","Cancel anytime. Secure payment — receipt and invoice by email."],
  t_pwS2:["Passe en illimité pour continuer à scanner.","Go unlimited to keep scanning."],
  t_vetT:["Assistant PawCal","PawCal Assistant"],
  t_vetSub:["Spécialisé chiens et chats","Dogs and cats specialist"],
@@ -599,10 +599,22 @@ function pickPlan(p){S.plan=p;
 /* ---- Paiement Paddle : le checkout s'ouvre en overlay dans la page.
        Paddle est le marchand de référence : il encaisse, gère les taxes et
        les factures, puis reverse. La clé secrète reste sur le serveur. ---- */
-var PADDLE_CFG=null, PADDLE_READY=false;
-function loadPaddle(){
+var PAY_CFG=null, PADDLE_READY=false, PROVIDER='none';
+
+/* Le serveur dit quel prestataire est branché. Le jour où les variables
+   Stripe sont posées dans Vercel, /api/config répond provider:'stripe' et
+   le paiement se rallume tout seul — aucune ligne à changer ici. */
+function loadPayCfg(){
+  if(PAY_CFG) return Promise.resolve(PAY_CFG);
   return fetch('/api/config').then(function(r){return r.json();}).then(function(cfg){
-    PADDLE_CFG=cfg;
+    PAY_CFG=cfg; PROVIDER=cfg.provider||'none';
+    if(PROVIDER==='stripe') PAY_OFF=false;
+    renderPayState();
+    return cfg;
+  }).catch(function(){ return {provider:'none',configured:false}; });
+}
+function loadPaddle(){
+  return loadPayCfg().then(function(cfg){
     if(!cfg.configured) throw {notConfigured:true};
     if(PADDLE_READY) return cfg;
     return new Promise(function(resolve,reject){
@@ -640,8 +652,8 @@ function onPaddleEvent(ev){
       (fr?'Le paiement est momentanément indisponible. Réessaie dans quelques minutes.'
          :'Checkout is temporarily unavailable. Please try again in a few minutes.')+
       '<br><span class="small">'+
-      (fr?'Un souci qui dure ? Écris à <a href="mailto:abdekdaher2@gmail.com" style="color:var(--accent)">abdekdaher2@gmail.com</a>, on règle ça.'
-         :'Still stuck? Email <a href="mailto:abdekdaher2@gmail.com" style="color:var(--accent)">abdekdaher2@gmail.com</a> and we will sort it out.')+
+      (fr?'Un souci qui dure ? Écris à <a href="mailto:pawcalpr@gmail.com" style="color:var(--accent)">pawcalpr@gmail.com</a>, on règle ça.'
+         :'Still stuck? Email <a href="mailto:pawcalpr@gmail.com" style="color:var(--accent)">pawcalpr@gmail.com</a> and we will sort it out.')+
       '</span></div>';
   }
 }
@@ -713,14 +725,49 @@ function askCode(){
     if(el)el.innerHTML='<div class="err">'+T.t_codeBad[L()]+'</div>';
   }
 }
+/* Stripe Checkout : page hébergée par Stripe, aucune donnée de carte ne
+   passe par nous. On demande l'URL au serveur puis on y envoie le navigateur. */
+function stripeCheckout(){
+  var fr=S.lang==='fr', b=document.getElementById('t_cta');
+  b.disabled=true; b.innerHTML='<span class="spin"></span>'+(fr?'Ouverture du paiement...':'Opening checkout...');
+  return fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({plan:S.plan,lang:S.lang,email:S.email,origin:location.origin})})
+  .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
+  .then(function(j){ if(!j.url) throw new Error('url manquante'); location.href=j.url; })
+  .catch(function(e){
+    b.disabled=false; b.textContent=T.t_cta[L()];
+    document.getElementById('pwErr').innerHTML='<div class="err">'+
+      (fr?'Paiement momentanément indisponible. ':'Checkout temporarily unavailable. ')+
+      esc(e.message||'')+'</div>';
+  });
+}
+/* Retour depuis Stripe : ?paid=1 dans l'URL → on confirme auprès du serveur. */
+function checkReturn(){
+  if(location.search.indexOf('paid=1')<0) return;
+  history.replaceState({}, '', location.pathname);
+  if(S.email) afterPurchase();
+  else { S.premium=true; save(); showHome(); }
+}
+/* L'email est l'identifiant du compte : il permet de restaurer l'abonnement
+   sur un autre téléphone. On ne le demande qu'une fois. */
+function askEmailOnce(){
+  if(S.email) return true;
+  var fr=S.lang==='fr';
+  var em=prompt(fr?'Ton email (il sert de compte pour retrouver ton abonnement) :'
+                  :'Your email (it is your account, used to restore your subscription):','');
+  if(em&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em.trim())){
+    S.email=em.trim().toLowerCase(); save(); return true;
+  }
+  return false;
+}
 function fakeBuy(){
   if(PAY_OFF){renderPayState();return;}
-  var fr=S.lang==='fr', b=document.getElementById('t_cta');
-  if(!S.email){
-    var em=prompt(fr?'Ton email (il sert de compte pour retrouver ton abonnement) :':'Your email (it is your account, used to restore your subscription):','');
-    if(em&&/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em.trim())){S.email=em.trim().toLowerCase();save();}
-    else{return;}
+  if(PROVIDER==='stripe'){
+    if(!askEmailOnce())return;
+    return stripeCheckout();
   }
+  var fr=S.lang==='fr', b=document.getElementById('t_cta');
+  if(!askEmailOnce())return;
   b.disabled=true; b.innerHTML='<span class="spin"></span>'+(fr?'Ouverture du paiement...':'Opening checkout...');
   loadPaddle().then(function(cfg){
     b.disabled=false; b.textContent=T.t_cta[L()];
@@ -1546,6 +1593,7 @@ function resetAll(){
   }
   renderStrip();
   renderPayState();
+  if(location.protocol!=='file:'){ loadPayCfg(); checkReturn(); }
   revalidate();
 })();
 </script>
