@@ -603,6 +603,21 @@ function onPaddleEvent(ev){
     Paddle.Checkout.close();
     afterPurchase();
   }
+  /* Paddle refuse d'ouvrir le paiement tant que le compte marchand n'est pas
+     entièrement vérifié : on remplace son message anglais « Something went
+     wrong » par une explication claire, dans la langue de l'utilisateur. */
+  if(ev && ev.name==='checkout.error'){
+    try{Paddle.Checkout.close();}catch(e){}
+    var fr=S.lang==='fr';
+    var el=document.getElementById('pwErr');
+    if(el) el.innerHTML='<div class="err">'+
+      (fr?'Le paiement est momentanément indisponible. Réessaie dans quelques minutes.'
+         :'Checkout is temporarily unavailable. Please try again in a few minutes.')+
+      '<br><span class="small">'+
+      (fr?'Un souci qui dure ? Écris à <a href="mailto:abdekdaher2@gmail.com" style="color:var(--accent)">abdekdaher2@gmail.com</a>, on règle ça.'
+         :'Still stuck? Email <a href="mailto:abdekdaher2@gmail.com" style="color:var(--accent)">abdekdaher2@gmail.com</a> and we will sort it out.')+
+      '</span></div>';
+  }
 }
 /* Après paiement : on confirme auprès du serveur (source de vérité) avec
    quelques tentatives, le temps que Paddle enregistre l'abonnement. */
