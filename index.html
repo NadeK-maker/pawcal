@@ -1066,13 +1066,19 @@ function renderChatLeft(){
   el.innerHTML='<div class="badge '+(n?'':'bad')+'" style="margin-bottom:10px">'+
     (n? n+' '+T.t_chatLeft[L()] : T.t_chatOut[L()])+'</div>';
 }
+function fmt(t){
+  return esc(t)
+    .replace(/\*\*([^*]+)\*\*/g,'<b>$1</b>')
+    .replace(/(^|\n)\s*[-*]\s+/g,'$1• ')
+    .replace(/\n/g,'<br>');
+}
 function renderMsgs(){
   var m=document.getElementById('msgs'); if(!m)return;
   var h='';
   for(var i=0;i<S.msgs.length;i++){
     var x=S.msgs[i]; if(!x||!x.text)continue;
     var cls=x.role==='me'?'me':x.role==='sys'?'sys':'bot';
-    h+='<div class="msg '+cls+'">'+esc(x.text).replace(/\n/g,'<br>')+'</div>';
+    h+='<div class="msg '+cls+'">'+fmt(x.text)+'</div>';
   }
   if(ASKING) h+='<div class="msg bot" id="typing"><span class="spin"></span></div>';
   m.innerHTML=h; m.scrollTop=m.scrollHeight;
