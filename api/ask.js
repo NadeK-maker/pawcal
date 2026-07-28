@@ -67,17 +67,25 @@ module.exports = async (req, res) => {
     .map(m => ({ role: m.role === 'bot' ? 'model' : 'user', parts: [{ text: String(m.text).slice(0, 2000) }] }));
   contents.push({ role: 'user', parts: [{ text: question }] });
 
-  const body = JSON.stringify({
-    system_instruction: { parts: [{ text: systemPrompt(b.pet, b.lang) }] },
-    contents,
-    generationConfig: { temperature: 0.6, maxOutputTokens: 500 },
-    safetySettings: [
-      { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
-    ]
-  });
+  // thinkingBudget:0 — sans cela les modèles « thinking » consomment tout le
+  // budget de sortie en raisonnement interne et la réponse arrive tronquée.
+  // Le champ n'existe pas sur les modèles 1.5, on ne l'envoie donc pas.
+  function makeBody(model) {
+    const gen = { temperature: 0.6, maxOutputTokens: 900 };
+    if (!/1\.5/.test(model)) gen.thinkingConfig = { thinkingBudget: 0 };
+    return JSON.stringify({
+      system_instruction: { parts: [{ text: systemPrompt(b.pet, b.lang) }] },
+      contents,
+      generationConfig: gen,
+      safetySettings: [
+        { category: 'HARM_CATEGORY_DANGEROUS_CONTENT', threshold: 'BLOCK_MEDIUM_AND_ABOVE' }
+      ]
+    });
+  }
 
   let lastErr = 'unknown';
   for (const model of MODELS) {
+    const body = makeBody(model);
     try {
       const r = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
@@ -86,14 +94,14 @@ module.exports = async (req, res) => {
       const j = await r.json();
       if (!r.ok) {
         lastErr = (j.error && j.error.message) || `HTTP ${r.status}`;
-        if (/not found|not supported|unsupported/i.test(lastErr)) continue;
+        if (/not found|not supported|unsupported|unknown name|thinking/i.test(lastErr)) continue;
         return res.status(502).json({ error: lastErr });
       }
       const c = j.candidates && j.candidates[0];
       if (!c || !c.content) { lastErr = 'réponse vide'; continue; }
-      const text = c.content.parts.map(p => p.text || '').join('').trim();
+      const text = (c.content.parts || []).map(p => p.text || '').join('').trim();
       if (!text) { lastErr = 'réponse vide'; continue; }
-      return res.status(200).json({ text });
+      return res.status(200).json({ text, truncated: c.finishReason === 'MAX_TOKENS' });
     } catch (e) {
       lastErr = e.message;
     }
