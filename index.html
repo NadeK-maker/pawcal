@@ -112,6 +112,23 @@ label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;font-weight
 .macro .mb u{display:block;height:100%;text-decoration:none}
 .kv{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-top:1px solid var(--line)}
 .kv b{white-space:nowrap;margin-left:10px}
+.msgs{flex:1;overflow-y:auto;padding:4px 0 8px;display:flex;flex-direction:column;gap:10px}
+.msg{max-width:86%;padding:12px 14px;border-radius:16px;font-size:14.5px;line-height:1.5;white-space:pre-wrap}
+.msg.me{align-self:flex-end;background:linear-gradient(135deg,#FFB020,#FF6A3D);color:#160B04;
+  border-bottom-right-radius:5px;font-weight:500}
+.msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);
+  border-bottom-left-radius:5px;color:var(--text)}
+.msg.sys{align-self:center;background:#12212E;border:1px solid #1D3A50;color:#84CAFF;
+  font-size:12.5px;text-align:center;max-width:100%}
+.sugg{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
+.sugg button{background:var(--surface2);border:1px solid var(--line);color:var(--muted);
+  border-radius:999px;padding:8px 12px;font-size:12.5px;cursor:pointer;font-family:inherit}
+.askbar{display:flex;gap:8px;align-items:flex-end;padding-top:8px;border-top:1px solid var(--line)}
+.askbar textarea{flex:1;background:var(--surface2);border:1px solid var(--line);color:var(--text);
+  border-radius:14px;padding:12px;font-size:15px;font-family:inherit;resize:none;height:46px;max-height:110px}
+.askbar button{flex:0 0 46px;height:46px;border-radius:14px;border:0;font-size:19px;cursor:pointer;
+  background:linear-gradient(135deg,#FFB020,#FF6A3D);color:#160B04}
+.askbar button:disabled{opacity:.45}
 .sect{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);
   font-weight:700;margin:14px 0 4px}
 .spin{width:20px;height:20px;border:2.5px solid #ffffff40;border-top-color:#160B04;border-radius:50%;
@@ -324,6 +341,24 @@ a{color:var(--accent2)}
   </div>
 </div>
 
+<!-- ========== ASSISTANT ========== -->
+<div class="scr" id="vet">
+  <div class="top">
+    <div><h2 style="margin:0" id="t_vetT">Assistant PawCal</h2>
+      <span class="small" id="t_vetSub">Spécialisé chiens et chats</span></div>
+    <button class="lang" onclick="showHome()">✕</button>
+  </div>
+  <div id="chatLeft"></div>
+  <div class="msgs" id="msgs"></div>
+  <div class="sugg" id="sugg"></div>
+  <div id="askErr"></div>
+  <div class="askbar">
+    <textarea id="i_ask" rows="1" placeholder="Pose ta question..."
+      oninput="growAsk(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ask();}"></textarea>
+    <button id="askBtn" onclick="ask()">↑</button>
+  </div>
+</div>
+
 <!-- ========== PAYWALL ========== -->
 <div class="scr" id="pw">
   <div class="top"><span></span><button class="lang" onclick="closePw()">✕</button></div>
@@ -336,6 +371,7 @@ a{color:var(--accent2)}
     <div class="feat"><b>✓</b><span id="t_f3">Plusieurs animaux sur un seul compte</span></div>
     <div class="feat"><b>✓</b><span id="t_f4">Rapport PDF à donner au vétérinaire</span></div>
     <div class="feat"><b>✓</b><span id="t_f5">Alertes ingrédients toxiques</span></div>
+    <div class="feat"><b>✓</b><span id="t_f6">Assistant IA illimité, spécialisé chiens et chats</span></div>
   </div>
   <div class="plan sel" id="p_year" onclick="pickPlan('year')">
     <span class="tag" id="t_save">-58%</span>
@@ -396,6 +432,7 @@ a{color:var(--accent2)}
 <!-- ========== NAV ========== -->
 <div id="nav">
   <button class="nb on" id="n1" onclick="showHome()"><b>◎</b><span id="t_n1">Journal</span></button>
+  <button class="nb" id="n3" onclick="showVet()"><b>✚</b><span id="t_n3">Assistant</span></button>
   <button class="fab" onclick="showScan()">＋</button>
   <button class="nb" id="n2" onclick="show('wt');navSel(2)"><b>◈</b><span id="t_n2">Poids</span></button>
 </div>
@@ -406,9 +443,10 @@ a{color:var(--accent2)}
 var S = {
   lang:'fr', species:null, name:'', w:0, age:0, ster:null, act:'norm', goal:'keep',
   target:0, meals:[], weights:[], scans:0, premium:false, mode:'bowl', plan:'year',
-  key:'', imgs:[], screen:'s0', day:'', idealW:0, email:'', lastCheck:0
+  key:'', imgs:[], screen:'s0', day:'', idealW:0, email:'', lastCheck:0, chats:0, msgs:[]
 };
 var FREE_SCANS = 3;
+var FREE_CHATS = 3;
 
 /* Sauvegarde tolérante : si le navigateur refuse le stockage, on continue en mémoire. */
 var Store = (function(){
@@ -422,7 +460,7 @@ var Store = (function(){
 })();
 function save(){
   Store.set({lang:S.lang,species:S.species,name:S.name,w:S.w,age:S.age,ster:S.ster,act:S.act,goal:S.goal,
-    idealW:S.idealW,target:S.target,meals:S.meals,weights:S.weights,scans:S.scans,premium:S.premium,key:S.key,email:S.email,lastCheck:S.lastCheck,day:today()});
+    idealW:S.idealW,target:S.target,meals:S.meals,weights:S.weights,scans:S.scans,chats:S.chats, msgs:S.msgs.slice(-30),premium:S.premium,key:S.key,email:S.email,lastCheck:S.lastCheck,day:today()});
 }
 function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 function restore(){
@@ -460,10 +498,21 @@ var T = {
  t_f3:["Plusieurs animaux sur un seul compte","Multiple pets on one account"],
  t_f4:["Rapport PDF à donner au vétérinaire","PDF report for your vet"],
  t_f5:["Alertes ingrédients toxiques","Toxic ingredient alerts"],
+ t_f6:["Assistant IA illimité, spécialisé chiens et chats","Unlimited AI assistant, dogs and cats specialist"],
  t_pyr:["12 mois","12 months"], t_pyr2:["3,33 € / mois — 7 jours d'essai gratuit","€3.33 / month — 7-day free trial"],
  t_pmo:["1 mois","1 month"], t_pmo2:["Sans engagement","Cancel anytime"],
  t_cta:["Continuer","Continue"], t_cancel:["Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.","Cancel anytime. Secure payment by Paddle — receipt and invoice by email."],
  t_pwS2:["Passe en illimité pour continuer à scanner.","Go unlimited to keep scanning."],
+ t_vetT:["Assistant PawCal","PawCal Assistant"],
+ t_vetSub:["Spécialisé chiens et chats","Dogs and cats specialist"],
+ t_n3:["Assistant","Assistant"],
+ t_share:["Partager ce résultat","Share this result"],
+ t_shareSub:["Analysé avec PawCal","Analysed with PawCal"],
+ t_askPh:["Pose ta question...","Ask your question..."],
+ t_chatLeft:["questions gratuites restantes","free questions left"],
+ t_chatOut:["Questions gratuites épuisées","Free questions used up"],
+ t_chatUnl:["Premium — questions illimitées","Premium — unlimited questions"],
+ t_vetHello:["Je suis spécialisé chiens et chats : nutrition, poids, comportement, prévention. Je ne remplace pas un vétérinaire et je ne pose jamais de diagnostic.","I specialise in dogs and cats: nutrition, weight, behaviour, prevention. I am not a vet and never give a diagnosis."],
  t_accT:["Compte","Account"],
  t_accHelp:["Ton email sert de compte : il retrouve ton abonnement sur n'importe quel appareil.","Your email is your account: it restores your subscription on any device."],
  t_accSave:["Enregistrer mon email","Save my email"],
@@ -502,12 +551,13 @@ function go(id){show(id);}
 function show(id){
   var a=document.querySelectorAll('.scr'); for(var i=0;i<a.length;i++)a[i].classList.remove('on');
   document.getElementById(id).classList.add('on'); S.screen=id;
-  var inApp=['home','scan','wt','set','pw'].indexOf(id)>=0;
+  var inApp=['home','scan','wt','set','pw','vet'].indexOf(id)>=0;
   document.getElementById('nav').className=inApp&&id!=='pw'?'on':'';
   window.scrollTo(0,0);
 }
 function navSel(n){document.getElementById('n1').className='nb'+(n===1?' on':'');
-  document.getElementById('n2').className='nb'+(n===2?' on':'');}
+  document.getElementById('n2').className='nb'+(n===2?' on':'');
+  var e3=document.getElementById('n3'); if(e3)e3.className='nb'+(n===3?' on':'');}
 function showHome(){show('home');navSel(1);renderHome();}
 function showScan(){
   if(!S.premium && S.scans>=FREE_SCANS){show('pw');return;}
@@ -997,6 +1047,235 @@ function callDirect(prompt){
   return attempt();
 }
 
+/* ============ ASSISTANT IA (chiens & chats) ============ */
+var ASKING=false;
+function showVet(){
+  show('vet'); navSel(3);
+  var ph=document.getElementById('i_ask'); if(ph) ph.placeholder=T.t_askPh[L()];
+  if(!S.msgs || !S.msgs.length){
+    S.msgs=[{role:'sys',text:T.t_vetHello[L()]}];
+  }
+  renderMsgs(); renderChatLeft(); renderSugg();
+  setTimeout(function(){var m=document.getElementById('msgs'); if(m)m.scrollTop=m.scrollHeight;},30);
+}
+function chatLeft(){ return Math.max(0, FREE_CHATS - (S.chats||0)); }
+function renderChatLeft(){
+  var el=document.getElementById('chatLeft'); if(!el)return;
+  if(S.premium){ el.innerHTML='<div class="badge ok" style="margin-bottom:10px">'+T.t_chatUnl[L()]+'</div>'; return; }
+  var n=chatLeft();
+  el.innerHTML='<div class="badge '+(n?'':'bad')+'" style="margin-bottom:10px">'+
+    (n? n+' '+T.t_chatLeft[L()] : T.t_chatOut[L()])+'</div>';
+}
+function renderMsgs(){
+  var m=document.getElementById('msgs'); if(!m)return;
+  var h='';
+  for(var i=0;i<S.msgs.length;i++){
+    var x=S.msgs[i]; if(!x||!x.text)continue;
+    var cls=x.role==='me'?'me':x.role==='sys'?'sys':'bot';
+    h+='<div class="msg '+cls+'">'+esc(x.text).replace(/\n/g,'<br>')+'</div>';
+  }
+  if(ASKING) h+='<div class="msg bot" id="typing"><span class="spin"></span></div>';
+  m.innerHTML=h; m.scrollTop=m.scrollHeight;
+}
+var SUGG={
+ fr:{dog:["Mon chien mendie tout le temps, que faire ?","Les friandises comptent-elles dans sa ration ?","Comment lire l'étiquette de ses croquettes ?","Combien de repas par jour à son âge ?"],
+     cat:["Mon chat réclame la nuit, que faire ?","Croquettes ou pâtée pour mon chat ?","Mon chat boit-il assez ?","Comment faire maigrir un chat sans risque ?"]},
+ en:{dog:["My dog begs constantly, what do I do?","Do treats count in the daily ration?","How do I read a kibble label?","How many meals a day at this age?"],
+     cat:["My cat wakes me at night, what do I do?","Dry or wet food for my cat?","Is my cat drinking enough?","How do I slim a cat down safely?"]}
+};
+function renderSugg(){
+  var el=document.getElementById('sugg'); if(!el)return;
+  if(S.msgs.filter(function(x){return x.role==='me';}).length){ el.innerHTML=''; return; }
+  var list=SUGG[S.lang==='fr'?'fr':'en'][S.species==='cat'?'cat':'dog'], h='';
+  for(var i=0;i<list.length;i++)
+    h+='<button onclick="pickSugg('+i+')">'+esc(list[i])+'</button>';
+  el.innerHTML=h;
+}
+function pickSugg(i){
+  var list=SUGG[S.lang==='fr'?'fr':'en'][S.species==='cat'?'cat':'dog'];
+  var t=document.getElementById('i_ask'); t.value=list[i]; growAsk(t); ask();
+}
+function growAsk(t){ t.style.height='auto'; t.style.height=Math.min(120,t.scrollHeight)+'px'; }
+function ask(){
+  if(ASKING)return;
+  var fr=S.lang==='fr';
+  var t=document.getElementById('i_ask'), q=(t.value||'').trim();
+  if(!q)return;
+  if(!S.premium && chatLeft()<=0){ show('pw'); return; }
+  document.getElementById('askErr').innerHTML='';
+  S.msgs.push({role:'me',text:q});
+  t.value=''; growAsk(t);
+  document.getElementById('sugg').innerHTML='';
+  ASKING=true; document.getElementById('askBtn').disabled=true; renderMsgs();
+
+  var hist=S.msgs.filter(function(x){return x.role!=='sys';}).slice(-11,-1);
+  askServer(q,hist).then(function(txt){
+    S.msgs.push({role:'bot',text:txt});
+    if(!S.premium){ S.chats=(S.chats||0)+1; }
+    save(); renderChatLeft();
+  }).catch(function(e){
+    if(e&&e.needKey){
+      document.getElementById('askErr').innerHTML='<div class="err">'+(fr?'Assistant indisponible hors ligne : ouvre la version en ligne.':'Assistant unavailable offline: use the online version.')+'</div>';
+    } else {
+      document.getElementById('askErr').innerHTML='<div class="err">'+(fr?'Pas de réponse : ':'No answer: ')+esc((e&&e.message)||'')+'</div>';
+    }
+    for(var i=S.msgs.length-1;i>=0;i--){ if(S.msgs[i].role==='me'){S.msgs.splice(i,1);break;} }
+  }).then(function(){
+    ASKING=false; document.getElementById('askBtn').disabled=false; renderMsgs();
+  });
+}
+function petPayload(){
+  return {name:S.name,species:S.species,w:S.w,age:S.age,ster:S.ster,target:S.target,goal:S.goal};
+}
+function askServer(q,hist){
+  return fetch('/api/ask',{method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({question:q,history:hist,pet:petPayload(),lang:S.lang})})
+  .then(function(r){
+    if(r.status===404||r.status===405)throw {noProxy:true};
+    return r.json().then(function(j){
+      if(!r.ok)throw new Error(j.error||('HTTP '+r.status));
+      return j.text;
+    },function(){throw {noProxy:true};});
+  },function(){throw {noProxy:true};})
+  .catch(function(e){
+    if(e&&e.noProxy){ if(!S.key)throw {needKey:true}; return askDirect(q,hist); }
+    throw e;
+  });
+}
+function askSystem(){
+  var fr=S.lang==='fr', esp=S.species==='cat'?'chat':'chien';
+  return "Tu es l'assistant PawCal, spécialisé chiens et chats (nutrition, poids, comportement, hygiène, prévention).\n"+
+   "ANIMAL : "+(S.name||'?')+", "+esp+", "+(S.w||'?')+" kg, "+(S.age||'?')+" ans, "+
+   (S.ster==='y'?'stérilisé':'non stérilisé')+", objectif "+(S.target||'?')+" kcal/jour.\n"+
+   "RÈGLES ABSOLUES : tu n'es PAS vétérinaire et tu ne poses JAMAIS de diagnostic. Tu ne donnes JAMAIS de posologie "+
+   "de médicament. Si le message évoque une urgence (toxique avalé, difficulté à respirer, convulsions, ventre gonflé et dur, "+
+   "vomissements improductifs, saignement, perte de conscience, incapacité à uriner, mise-bas difficile, traumatisme, "+
+   "chat qui ne mange plus depuis 24 h, coup de chaleur), ta PREMIÈRE phrase dit d'appeler un vétérinaire immédiatement. "+
+   "Tu ne recommandes jamais de retarder une consultation.\n"+
+   "STYLE : "+(fr?"Réponds en français.":"Answer in English.")+" Chaleureux, concret, 150 mots maximum.";
+}
+function askDirect(q,hist){
+  var models=['gemini-flash-latest','gemini-2.5-flash','gemini-1.5-flash'], i=0;
+  var contents=[];
+  for(var n=0;n<hist.length;n++)
+    contents.push({role:hist[n].role==='bot'?'model':'user',parts:[{text:String(hist[n].text).slice(0,2000)}]});
+  contents.push({role:'user',parts:[{text:q}]});
+  function attempt(){
+    return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[i]+':generateContent',
+      {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},
+       body:JSON.stringify({system_instruction:{parts:[{text:askSystem()}]},contents:contents,
+         generationConfig:{temperature:0.6,maxOutputTokens:500}})})
+    .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
+    .then(function(res){
+      if(!res.ok){
+        var msg=(res.j&&res.j.error&&res.j.error.message)||'HTTP error';
+        if(i<models.length-1&&/not found|not supported|unsupported/i.test(msg)){i++;return attempt();}
+        throw new Error(msg);
+      }
+      var c=res.j.candidates&&res.j.candidates[0];
+      if(!c||!c.content)throw new Error('empty response');
+      return c.content.parts.map(function(p){return p.text||'';}).join('').trim();
+    });
+  }
+  return attempt();
+}
+
+/* ============ PARTAGE DU RÉSULTAT (image) ============ */
+var LAST_SHARE=null;
+function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);
+  c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
+function wrapText(c,txt,x,y,max,lh,lines){
+  var words=String(txt).split(' '),line='',n=0;
+  for(var i=0;i<words.length;i++){
+    var test=line?line+' '+words[i]:words[i];
+    if(c.measureText(test).width>max && line){
+      c.fillText(line,x,y+n*lh); n++; line=words[i];
+      if(n>=lines-1){ // dernière ligne : on tronque
+        var rest=words.slice(i).join(' ');
+        while(c.measureText(rest+'…').width>max && rest.length>1) rest=rest.slice(0,-1);
+        c.fillText(rest+(rest.length<words.slice(i).join(' ').length?'…':''),x,y+n*lh);
+        return y+(n+1)*lh;
+      }
+    } else line=test;
+  }
+  c.fillText(line,x,y+n*lh);
+  return y+(n+1)*lh;
+}
+function shareCanvas(d){
+  var W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;
+  var x=c.getContext('2d');
+  x.fillStyle='#0E1116';x.fillRect(0,0,W,H);
+  var g=x.createRadialGradient(W/2,300,40,W/2,300,760);
+  g.addColorStop(0,'rgba(255,122,69,.30)');g.addColorStop(1,'rgba(255,122,69,0)');
+  x.fillStyle=g;x.fillRect(0,0,W,H);
+  var F='-apple-system,BlinkMacSystemFont,Segoe UI,Inter,Roboto,Helvetica,Arial,sans-serif';
+
+  // logo
+  var lg=x.createLinearGradient(80,80,180,180);
+  lg.addColorStop(0,'#FFB020');lg.addColorStop(1,'#FF6A3D');
+  x.fillStyle=lg; rr(x,80,80,88,88,26); x.fill();
+  x.fillStyle='#160B04';x.font='700 52px '+F;x.textAlign='center';x.textBaseline='middle';
+  x.fillText('P',124,126);
+  x.textAlign='left';x.textBaseline='alphabetic';
+  x.fillStyle='#F2F4F7';x.font='700 44px '+F;x.fillText('PawCal',192,140);
+
+  // gros chiffre
+  x.textAlign='center';
+  x.fillStyle='#FF7A45';x.font='800 220px '+F;
+  x.fillText(d.big,W/2,470);
+  x.fillStyle='#98A2B3';x.font='600 46px '+F;
+  x.fillText(d.unit,W/2,545);
+
+  // titre
+  x.fillStyle='#F2F4F7';x.font='700 56px '+F;x.textAlign='center';
+  var yy=wrapText(x,d.title,W/2,665,860,68,2);
+
+  // carte de détails
+  var cardY=yy+40, rows=d.rows.filter(function(r){return r&&r[1];}), ch=52*rows.length+56;
+  x.fillStyle='#151A21'; rr(x,80,cardY,W-160,ch,32); x.fill();
+  x.strokeStyle='#242B36';x.lineWidth=2;rr(x,80,cardY,W-160,ch,32);x.stroke();
+  for(var i=0;i<rows.length;i++){
+    var ry=cardY+58+i*52;
+    x.textAlign='left';x.fillStyle='#98A2B3';x.font='400 34px '+F;x.fillText(rows[i][0],128,ry);
+    x.textAlign='right';x.fillStyle='#F2F4F7';x.font='600 34px '+F;x.fillText(rows[i][1],W-128,ry);
+  }
+
+  // badge
+  if(d.badge){
+    x.textAlign='center';x.font='600 34px '+F;
+    var bw=x.measureText(d.badge).width+64, by=cardY+ch+30;
+    x.fillStyle=d.badgeBg||'#1A2A1F'; rr(x,(W-bw)/2,by,bw,64,32); x.fill();
+    x.fillStyle=d.badgeFg||'#12B76A'; x.fillText(d.badge,W/2,by+42);
+  }
+
+  // pied
+  x.textAlign='center';x.fillStyle='#667085';x.font='400 30px '+F;
+  x.fillText(T.t_shareSub[L()]+' · '+(location.host||'pawcal-flame.vercel.app'),W/2,H-56);
+  return c;
+}
+function shareResult(){
+  if(!LAST_SHARE)return;
+  var fr=S.lang==='fr';
+  var c=shareCanvas(LAST_SHARE);
+  var name='pawcal-'+(S.name||'pet').toLowerCase().replace(/[^a-z0-9]+/g,'-')+'.png';
+  c.toBlob(function(blob){
+    if(!blob)return;
+    var file=null;
+    try{ file=new File([blob],name,{type:'image/png'}); }catch(e){}
+    if(file && navigator.canShare && navigator.canShare({files:[file]}) && navigator.share){
+      navigator.share({files:[file],title:'PawCal',
+        text:fr?'Analysé avec PawCal 🐾':'Analysed with PawCal 🐾'}).catch(function(){});
+      return;
+    }
+    var u=URL.createObjectURL(blob), a=document.createElement('a');
+    a.href=u;a.download=name;document.body.appendChild(a);a.click();
+    document.body.removeChild(a);setTimeout(function(){URL.revokeObjectURL(u);},4000);
+  },'image/png');
+}
+function shareBtn(){
+  return '<button class="btn sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--line)" onclick="shareResult()">↗ '+T.t_share[L()]+'</button>';
+}
+
 /* ============ AFFICHAGE DU RÉSULTAT ============ */
 function confBadge(j){
   var fr=S.lang==='fr';
@@ -1066,6 +1345,14 @@ function renderResult(j){
       adviceHtml(j.advice)+'</div>'+
       (j.ideal_weight_kg?'<button class="btn sm" onclick="applyIdeal('+(+j.ideal_weight_kg)+')">'+
         (fr?'Régler l\'objectif sur ce poids idéal':'Set target from this ideal weight')+'</button>':'');
+    LAST_SHARE={big:String(bcs)+'/9',unit:(fr?'score corporel (WSAVA)':'body condition (WSAVA)'),
+      title:(S.name||'')+' — '+verdict,
+      rows:[[fr?'Poids actuel':'Current weight',S.w+' kg'],
+            [fr?'Poids idéal':'Ideal weight',j.ideal_weight_kg?(+j.ideal_weight_kg).toFixed(1)+' kg':''],
+            [fr?'Écart':'Gap',j.delta_kg?Math.abs(+j.delta_kg).toFixed(1)+' kg':''],
+            [fr?'Durée sûre':'Safe timeframe',j.weeks_needed?Math.round(j.weeks_needed)+(fr?' semaines':' weeks'):'']],
+      badge:verdict, badgeBg:(bcs>=4&&bcs<=5)?'#12211A':'#2A1A12', badgeFg:(bcs>=4&&bcs<=5)?'#12B76A':'#FFB020'};
+    h+=shareBtn();
     document.getElementById('result').innerHTML=h;
     return;
   }
@@ -1095,6 +1382,14 @@ function renderResult(j){
       warnHtml(j.warnings)+adviceHtml(j.advice)+'</div>'+
       '<button class="btn sm" onclick="addMeal(\''+encodeURIComponent(j.title||'Ration')+'\','+(+j.total_kcal||S.target)+',\''+g+' g\')">'+
         (fr?'Enregistrer la ration du jour':'Log today\'s ration')+'</button>';
+    LAST_SHARE={big:String(g),unit:(fr?'grammes par jour':'grams per day'),
+      title:j.title||(fr?'Ration quotidienne':'Daily ration'),
+      rows:[[fr?'Pour':'For',(S.name||'')+' · '+S.w+' kg'],
+            [fr?'Objectif':'Target',S.target+' kcal/'+(fr?'j':'d')],
+            [fr?'Densité':'Energy density',Math.round(j.kcal_per_100g||0)+' kcal/100 g'],
+            [fr?'Par repas':'Per meal',gm+' g']],
+      badge:(fr?'Calcul vétérinaire NRC/WSAVA':'NRC/WSAVA vet formula'),badgeBg:'#161E2B',badgeFg:'#84CAFF'};
+    h+=shareBtn();
     document.getElementById('result').innerHTML=h;
     return;
   }
@@ -1121,6 +1416,15 @@ function renderResult(j){
     warnHtml(j.warnings)+adviceHtml(j.advice)+'</div>'+
     '<button class="btn sm" onclick="addMeal(\''+encodeURIComponent(j.title||'Repas')+'\','+kcal+',\'\')">'+
       (fr?'Ajouter au journal':'Add to log')+'</button>';
+  LAST_SHARE={big:String(kcal),unit:'kcal',
+    title:j.title||(fr?'Repas':'Meal'),
+    rows:[[fr?'Pour':'For',(S.name||'')+' · '+S.w+' kg'],
+          [fr?'Objectif du jour':'Daily target',S.target+' kcal'],
+          [fr?'Part de la journée':'Share of the day',pct+' %'],
+          [fr?'Équivalent':'Equivalent',j.equivalent?String(j.equivalent).slice(0,34):'']],
+    badge:vtxt||'',badgeBg:vcls==='bad'?'#2B1618':vcls==='warn'?'#2A2113':'#12211A',
+    badgeFg:vcls==='bad'?'#F97066':vcls==='warn'?'#FFB020':'#12B76A'};
+  h+=shareBtn();
   document.getElementById('result').innerHTML=h;
 }
 function applyIdeal(kg){
