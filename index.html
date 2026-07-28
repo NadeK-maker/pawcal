@@ -1170,7 +1170,7 @@ function askDirect(q,hist){
     return fetch('https://generativelanguage.googleapis.com/v1beta/models/'+models[i]+':generateContent',
       {method:'POST',headers:{'Content-Type':'application/json','x-goog-api-key':S.key},
        body:JSON.stringify({system_instruction:{parts:[{text:askSystem()}]},contents:contents,
-         generationConfig:Object.assign({temperature:0.6,maxOutputTokens:900},/1\.5/.test(models[i])?{}:{thinkingConfig:{thinkingBudget:0}})})})
+         generationConfig:{temperature:0.6,maxOutputTokens:3000}})})
     .then(function(r){return r.json().then(function(j){return {ok:r.ok,j:j};});})
     .then(function(res){
       if(!res.ok){
