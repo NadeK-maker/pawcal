@@ -286,7 +286,7 @@ a{color:var(--accent2)}
     <div class="stat"><b id="st_tgt">0</b><span id="t_target">Objectif</span></div>
     <div class="stat"><b id="st_w">—</b><span id="t_weight">Poids</span></div>
   </div>
-  <div id="upsell" class="card" style="display:none;cursor:pointer;background:linear-gradient(135deg,#2A1708,#20140E);border-color:#4A2B12" onclick="show('pw')">
+  <div id="upsell" class="card" style="display:none;cursor:pointer;background:linear-gradient(135deg,#2A1708,#20140E);border-color:#4A2B12" onclick="showPw()">
     <b style="font-size:15px">⭐ <span id="t_up1">Passe en illimité</span></b>
     <div class="small" id="t_up2" style="margin-top:3px">Scans illimités, plusieurs animaux — 3,33 €/mois</div>
   </div>
@@ -383,9 +383,20 @@ a{color:var(--accent2)}
     <div class="small" id="t_pmo2">Sans engagement</div>
   </div>
   <div id="pwErr"></div>
-  <button class="btn" onclick="fakeBuy()" id="t_cta">Continuer</button>
-  <button class="btn ghost sm" style="margin-top:8px" onclick="restorePurchase()" id="t_already">J'ai déjà un abonnement</button>
-  <p class="small" style="text-align:center;margin-top:10px" id="t_cancel">Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.</p>
+  <div id="payOff" style="display:none">
+    <div class="card" style="border-color:#3A2A12;background:#1C1710">
+      <h2 style="margin:0 0 6px" id="t_offT">Paiement indisponible</h2>
+      <p class="small" style="margin:0" id="t_offB"></p>
+    </div>
+    <a class="btn" id="mailBtn" href="#" style="display:block;text-align:center;text-decoration:none;line-height:52px"><span id="t_offC">Nous écrire</span></a>
+    <button class="btn ghost sm" style="margin-top:8px" onclick="askCode()" id="t_offCode">J'ai un code d'accès</button>
+    <div id="codeMsg"></div>
+  </div>
+  <div id="payOn">
+    <button class="btn" onclick="fakeBuy()" id="t_cta">Continuer</button>
+    <button class="btn ghost sm" style="margin-top:8px" onclick="restorePurchase()" id="t_already">J'ai déjà un abonnement</button>
+    <p class="small" style="text-align:center;margin-top:10px" id="t_cancel">Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.</p>
+  </div>
 </div>
 
 <!-- ========== RÉGLAGES / CLÉ API ========== -->
@@ -417,7 +428,7 @@ a{color:var(--accent2)}
   <div class="card" style="margin-top:16px">
     <h2 id="t_subT">Abonnement</h2>
     <div class="small" id="o_sub" style="margin-bottom:10px"></div>
-    <button class="btn sm" style="margin-bottom:8px" onclick="show('pw')" id="goPremium">⭐ Passer Premium — scans illimités</button>
+    <button class="btn sm" style="margin-bottom:8px" onclick="showPw()" id="goPremium">⭐ Passer Premium — scans illimités</button>
     <button class="btn ghost sm" style="margin-bottom:8px" onclick="openPortal()" id="t_portal">Gérer mon abonnement et mes factures</button>
     <button class="btn ghost sm" onclick="restorePurchase()" id="t_restore">Restaurer mon abonnement</button>
   </div>
@@ -445,6 +456,13 @@ var S = {
   target:0, meals:[], weights:[], scans:0, premium:false, mode:'bowl', plan:'year',
   key:'', imgs:[], screen:'s0', day:'', idealW:0, email:'', lastCheck:0, chats:0, msgs:[]
 };
+/* ---- Paiement temporairement coupé -------------------------------------
+   Paddle est en pause (vérification du compte). En attendant Stripe, on
+   n'ouvre plus aucun checkout : on affiche un message clair et une adresse
+   de contact. Repasser PAY_OFF à false suffit à tout réactiver. ---------- */
+var PAY_OFF = true;
+var CONTACT = 'pawcalpr@gmail.com';
+
 var FREE_SCANS = 3;
 var FREE_CHATS = 3;
 
@@ -501,7 +519,14 @@ var T = {
  t_f6:["Assistant IA illimité, spécialisé chiens et chats","Unlimited AI assistant, dogs and cats specialist"],
  t_pyr:["12 mois","12 months"], t_pyr2:["3,33 € / mois — 7 jours d'essai gratuit","€3.33 / month — 7-day free trial"],
  t_pmo:["1 mois","1 month"], t_pmo2:["Sans engagement","Cancel anytime"],
- t_cta:["Continuer","Continue"], t_cancel:["Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.","Cancel anytime. Secure payment by Paddle — receipt and invoice by email."],
+ t_cta:["Continuer","Continue"],
+ t_offT:["Paiement indisponible","Payments unavailable"],
+ t_offB:["Nous ne pouvons pas encaisser de paiement pour le moment. Écris-nous et nous t'ouvrons l'accès complet gratuitement en attendant.","We can't take payments right now. Email us and we'll open full access for you, free, in the meantime."],
+ t_offC:["Nous écrire","Email us"],
+ t_offCode:["J'ai un code d'accès","I have an access code"],
+ t_codeAsk:["Colle ton code d'accès :","Paste your access code:"],
+ t_codeBad:["Code invalide.","Invalid code."],
+ t_codeOk:["Accès complet activé. Merci !","Full access unlocked. Thank you!"], t_cancel:["Annulable à tout moment. Paiement sécurisé par Paddle — reçu et facture par email.","Cancel anytime. Secure payment by Paddle — receipt and invoice by email."],
  t_pwS2:["Passe en illimité pour continuer à scanner.","Go unlimited to keep scanning."],
  t_vetT:["Assistant PawCal","PawCal Assistant"],
  t_vetSub:["Spécialisé chiens et chats","Dogs and cats specialist"],
@@ -543,7 +568,7 @@ function applyLang(){
   if(S.name) document.getElementById('h_hello').textContent=(S.lang==='fr'?'Salut ':'Hey ')+S.name+' '+(S.species==='cat'?'🐈':'🐕');
   renderHome(); renderPet();
 }
-function setLang(l){S.lang=l;applyLang();save();}
+function setLang(l){S.lang=l;applyLang();renderPayState();save();}
 function toggleLang(){setLang(S.lang==='fr'?'en':'fr');}
 
 /* ============ NAVIGATION ============ */
@@ -560,12 +585,13 @@ function navSel(n){document.getElementById('n1').className='nb'+(n===1?' on':'')
   var e3=document.getElementById('n3'); if(e3)e3.className='nb'+(n===3?' on':'');}
 function showHome(){show('home');navSel(1);renderHome();}
 function showScan(){
-  if(!S.premium && S.scans>=FREE_SCANS){show('pw');return;}
+  if(!S.premium && S.scans>=FREE_SCANS){showPw();return;}
   document.getElementById('result').innerHTML='';document.getElementById('scanErr').innerHTML='';
   show('scan');navSel(0);renderStrip();
 }
 function openApp(){show('home');navSel(1);renderHome();}
 function closePw(){show(S.meals.length||true?'home':'home');navSel(1);}
+function showPw(){show('pw');renderPayState();}
 function pickPlan(p){S.plan=p;
   document.getElementById('p_year').className='plan'+(p==='year'?' sel':'');
   document.getElementById('p_mon').className='plan'+(p==='mon'?' sel':'');}
@@ -643,7 +669,52 @@ function afterPurchase(){
   }
   poll();
 }
+/* Bascule l'écran Premium en mode « paiement coupé ». */
+function renderPayState(){
+  var off=document.getElementById('payOff'), on=document.getElementById('payOn');
+  if(!off||!on)return;
+  off.style.display = PAY_OFF?'block':'none';
+  on.style.display  = PAY_OFF?'none':'block';
+  /* les tarifs n'ont pas de sens tant qu'on ne peut pas encaisser */
+  var py=document.getElementById('p_year'), pm=document.getElementById('p_mon');
+  if(py) py.style.display = PAY_OFF?'none':'block';
+  if(pm) pm.style.display = PAY_OFF?'none':'block';
+  var sub=document.getElementById('t_pwS');
+  if(sub&&PAY_OFF) sub.textContent = S.lang==='fr'
+    ? 'Tes scans gratuits sont utilisés.' : 'You have used your free scans.';
+  var a=document.getElementById('mailBtn');
+  if(a){
+    var fr=S.lang==='fr';
+    var sujet=fr?'PawCal — demande d\'acces':'PawCal - access request';
+    var corps=fr?'Bonjour,\n\nJe voudrais un acces complet a PawCal.\n\nMerci !'
+               :'Hello,\n\nI would like full access to PawCal.\n\nThanks!';
+    a.href='mailto:'+CONTACT+'?subject='+encodeURIComponent(sujet)+'&body='+encodeURIComponent(corps);
+  }
+}
+/* Codes d'accès distribués à la main en attendant les paiements.
+   On ne stocke que des empreintes : le code en clair n'apparaît pas
+   dans la page. Simple, suffisant pour un dépannage temporaire. */
+var CODE_HASHES = ['7ut77n','1i40dqu','10l8u4r','p55y2b','7cec5e','1khae2v','1walyr4','ekfg2i','6tn40g','1hi6mtq','yh7dw0','vye950'];
+function h32(str){
+  var h=5381; str=String(str).trim().toUpperCase();
+  for(var i=0;i<str.length;i++){h=((h<<5)+h+str.charCodeAt(i))>>>0;}
+  return h.toString(36);
+}
+function askCode(){
+  var fr=S.lang==='fr';
+  var c=prompt(T.t_codeAsk[L()],'');
+  if(c===null)return;
+  var el=document.getElementById('codeMsg');
+  if(CODE_HASHES.indexOf(h32(c))>=0){
+    S.premium=true; save();
+    if(el)el.innerHTML='<div class="badge ok" style="margin-top:10px">'+T.t_codeOk[L()]+'</div>';
+    setTimeout(function(){showHome();},900);
+  } else {
+    if(el)el.innerHTML='<div class="err">'+T.t_codeBad[L()]+'</div>';
+  }
+}
 function fakeBuy(){
+  if(PAY_OFF){renderPayState();return;}
   var fr=S.lang==='fr', b=document.getElementById('t_cta');
   if(!S.email){
     var em=prompt(fr?'Ton email (il sert de compte pour retrouver ton abonnement) :':'Your email (it is your account, used to restore your subscription):','');
@@ -993,7 +1064,7 @@ function addManualMeal(){
 function analyze(){
   var fr=S.lang==='fr';
   if(!S.imgs.length)return;
-  if(!S.premium&&S.scans>=FREE_SCANS){show('pw');return;}
+  if(!S.premium&&S.scans>=FREE_SCANS){showPw();return;}
   var b=document.getElementById('analyzeBtn');
   b.disabled=true;b.innerHTML='<span class="spin"></span>'+(fr?'Analyse en cours...':'Analyzing...');
   document.getElementById('scanErr').innerHTML='';
@@ -1122,7 +1193,7 @@ function ask(){
   var fr=S.lang==='fr';
   var t=document.getElementById('i_ask'), q=(t.value||'').trim();
   if(!q)return;
-  if(!S.premium && chatLeft()<=0){ show('pw'); return; }
+  if(!S.premium && chatLeft()<=0){ showPw(); return; }
   document.getElementById('askErr').innerHTML='';
   S.msgs.push({role:'me',text:q});
   t.value=''; growAsk(t);
@@ -1474,6 +1545,7 @@ function resetAll(){
     show('home'); navSel(1); renderHome();
   }
   renderStrip();
+  renderPayState();
   revalidate();
 })();
 </script>
