@@ -67,12 +67,14 @@ module.exports = async (req, res) => {
     .map(m => ({ role: m.role === 'bot' ? 'model' : 'user', parts: [{ text: String(m.text).slice(0, 2000) }] }));
   contents.push({ role: 'user', parts: [{ text: question }] });
 
-  // thinkingBudget:0 — sans cela les modèles « thinking » consomment tout le
-  // budget de sortie en raisonnement interne et la réponse arrive tronquée.
-  // Le champ n'existe pas sur les modèles 1.5, on ne l'envoie donc pas.
-  function makeBody(model) {
-    const gen = { temperature: 0.6, maxOutputTokens: 900 };
-    if (!/1\.5/.test(model)) gen.thinkingConfig = { thinkingBudget: 0 };
+  // Les modèles « thinking » consomment le budget de sortie en raisonnement
+  // interne : sans précaution la réponse arrive coupée en plein milieu.
+  // On tente donc d'abord thinkingBudget:0 ; si l'API refuse ce champ, on
+  // réessaie sans lui mais avec un budget de sortie large.
+  function makeBody(noThinking) {
+    const gen = noThinking
+      ? { temperature: 0.6, maxOutputTokens: 900, thinkingConfig: { thinkingBudget: 0 } }
+      : { temperature: 0.6, maxOutputTokens: 3000 };
     return JSON.stringify({
       system_instruction: { parts: [{ text: systemPrompt(b.pet, b.lang) }] },
       contents,
@@ -83,9 +85,16 @@ module.exports = async (req, res) => {
     });
   }
 
-  let lastErr = 'unknown';
+  const ATTEMPTS = [];
   for (const model of MODELS) {
-    const body = makeBody(model);
+    if (!/1\.5/.test(model)) ATTEMPTS.push({ model, noThinking: true });
+    ATTEMPTS.push({ model, noThinking: false });
+  }
+
+  let lastErr = 'unknown';
+  for (const att of ATTEMPTS) {
+    const model = att.model;
+    const body = makeBody(att.noThinking);
     try {
       const r = await fetch(
         `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`,
@@ -94,7 +103,7 @@ module.exports = async (req, res) => {
       const j = await r.json();
       if (!r.ok) {
         lastErr = (j.error && j.error.message) || `HTTP ${r.status}`;
-        if (/not found|not supported|unsupported|unknown name|thinking/i.test(lastErr)) continue;
+        if (/not found|not supported|unsupported|unknown name|thinking|invalid argument/i.test(lastErr)) continue;
         return res.status(502).json({ error: lastErr });
       }
       const c = j.candidates && j.candidates[0];
