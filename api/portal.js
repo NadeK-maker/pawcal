@@ -1,22 +1,22 @@
-// PawCal — portail client Paddle.
+// PawCal — portail client (Stripe ou Paddle).
 // Une seule adresse qui donne à l'utilisateur : ses factures, le changement
 // de moyen de paiement, l'annulation en autonomie.
 // Réduit le support client à presque rien.
+//
+// Côté Stripe il faut avoir activé le portail une fois :
+// dashboard.stripe.com → Settings → Billing → Customer portal → Activate.
 
-const API = () =>
-  process.env.PADDLE_ENV === 'production'
-    ? 'https://api.paddle.com'
-    : 'https://sandbox-api.paddle.com';
+const { stripe } = require('./_stripe');
 
 async function paddle(path, opts = {}) {
-    const key = (process.env.PADDLE_API_KEY || '').trim();
+  const key = (process.env.PADDLE_API_KEY || '').trim();
   if (!key) throw new Error('PADDLE_API_KEY manquante sur le serveur');
-  const r = await fetch(`${API()}${path}`, {
+  const base = process.env.PADDLE_ENV === 'production'
+    ? 'https://api.paddle.com'
+    : 'https://sandbox-api.paddle.com';
+  const r = await fetch(`${base}${path}`, {
     method: opts.method || 'GET',
-    headers: {
-      Authorization: `Bearer ${key}`,
-      'Content-Type': 'application/json'
-    },
+    headers: { Authorization: `Bearer ${key}`, 'Content-Type': 'application/json' },
     body: opts.body ? JSON.stringify(opts.body) : undefined
   });
   const j = await r.json();
@@ -33,19 +33,32 @@ module.exports = async (req, res) => {
   const email = String((req.body && req.body.email) || '').trim().toLowerCase();
   if (!email) return res.status(400).json({ error: 'email requis' });
 
+  const base = (req.body && req.body.origin) || `https://${req.headers.host}`;
+  const hasStripe = !!(process.env.STRIPE_SECRET_KEY || '').trim();
+
   try {
+    if (hasStripe) {
+      const customers = await stripe(`/customers?email=${encodeURIComponent(email)}&limit=1`);
+      if (!customers.data || !customers.data.length) {
+        return res.status(404).json({ error: 'Aucun compte trouvé pour cet email' });
+      }
+      const session = await stripe('/billing_portal/sessions', {
+        method: 'POST',
+        body: { customer: customers.data[0].id, return_url: base }
+      });
+      if (!session.url) return res.status(502).json({ error: 'portail indisponible' });
+      return res.status(200).json({ url: session.url });
+    }
+
     const customers = await paddle(`/customers?email=${encodeURIComponent(email)}`);
     if (!customers.data || !customers.data.length) {
       return res.status(404).json({ error: 'Aucun compte trouvé pour cet email' });
     }
     const session = await paddle(`/customers/${customers.data[0].id}/portal-sessions`, {
-      method: 'POST',
-      body: {}
+      method: 'POST', body: {}
     });
-    const url =
-      session.data && session.data.urls && session.data.urls.general
-        ? session.data.urls.general.overview
-        : null;
+    const url = session.data && session.data.urls && session.data.urls.general
+      ? session.data.urls.general.overview : null;
     if (!url) return res.status(502).json({ error: 'portail indisponible' });
     return res.status(200).json({ url });
   } catch (e) {
