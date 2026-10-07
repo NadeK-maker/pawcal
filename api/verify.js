@@ -2,10 +2,27 @@
 // C'est le SERVEUR qui tranche : le navigateur ne peut pas se déclarer Premium.
 
 const { stripe, ACTIVE, cors } = require('./_stripe');
+const { dodo, dodoOn, isOurs, ACTIVE: DODO_ACTIVE } = require('./_dodo');
 
 module.exports = async (req, res) => {
   cors(res);
   if (req.method === 'OPTIONS') return res.status(204).end();
+
+  // Retour de Dodo : ?subscription_id=sub_...
+  const subId = (req.query && req.query.subscription_id) || '';
+  if (subId && dodoOn()) {
+    try {
+      const s = await dodo(`/subscriptions/${encodeURIComponent(subId)}`);
+      return res.status(200).json({
+        premium: DODO_ACTIVE.has(s.status) && isOurs(s),
+        email: (s.customer && s.customer.email) || null,
+        status: s.status,
+        current_period_end: s.next_billing_date || null
+      });
+    } catch (e) {
+      return res.status(502).json({ premium: false, error: e.message });
+    }
+  }
 
   const id = (req.query && req.query.session_id) || '';
   if (!id) return res.status(400).json({ premium: false, error: 'session_id requis' });
