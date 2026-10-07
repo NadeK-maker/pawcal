@@ -1704,6 +1704,17 @@ function addManualMeal(){
   document.getElementById('i_mName').value='';document.getElementById('i_mKcal').value='';
   save();showHome();
 }
+/* Erreurs de l'IA (scan et assistant) : un message clair pour l'utilisateur,
+   le détail technique reste dans la console pour le débogage. */
+function aiErr(e,scan){
+  var fr=S.lang==='fr', m=String((e&&e.message)||'');
+  if(m) console.warn('Scoopy IA :',m);
+  if(e&&e.needKey) return fr?'Pas de connexion internet. Vérifie ta connexion et réessaie.':'No internet connection. Check your connection and try again.';
+  if(scan&&m==='bad json') return fr?'Je n\'ai pas réussi à lire la photo. Essaie avec une photo plus nette et bien éclairée.':'I couldn\'t read the photo. Try a sharper, well-lit one.';
+  if(/exhausted|quota|rate|429|overloaded|unavailable|503/i.test(m)) return fr?'L\'assistant est très demandé en ce moment. Réessaie dans une minute.':'The assistant is very busy right now. Try again in a minute.';
+  if(/api key|GEMINI_API_KEY|permission|403|billing/i.test(m)) return fr?'L\'IA est temporairement indisponible. Réessaie un peu plus tard.':'The AI is temporarily unavailable. Please try again later.';
+  return fr?'Pas de réponse pour le moment. Réessaie dans un instant.':'No answer right now. Try again in a moment.';
+}
 function analyze(){
   var fr=S.lang==='fr';
   if(!S.imgs.length)return;
@@ -1717,11 +1728,11 @@ function analyze(){
     S.scans++; save(); renderFreeLeft(); renderResult(j);
     b.style.display='none';   // le résultat est affiché : pas de second scan par erreur
   }).catch(function(e){
-    if(e&&e.needKey){
+    if(e&&e.needKey&&location.protocol==='file:'){
       show('set');
       document.getElementById('keyOk').innerHTML='<div class="err">'+(fr?'Colle d\'abord ta clé API ici (ou utilise la version en ligne où la clé est déjà sur le serveur).':'Paste your API key here first (or use the online version where the key lives on the server).')+'</div>';
     } else {
-      document.getElementById('scanErr').innerHTML='<div class="err">'+(fr?'Échec de l\'analyse : ':'Analysis failed: ')+esc(e.message||'')+'</div>';
+      document.getElementById('scanErr').innerHTML='<div class="err">'+esc(aiErr(e,true))+'</div>';
     }
   }).then(function(){
     b.disabled=false;b.textContent=fr?'Analyser':'Analyze';
@@ -1850,11 +1861,10 @@ function ask(){
     if(!S.premium){ S.chats=(S.chats||0)+1; }
     save(); renderChatLeft();
   }).catch(function(e){
-    if(e&&e.needKey){
-      document.getElementById('askErr').innerHTML='<div class="err">'+(fr?'Assistant indisponible hors ligne : ouvre la version en ligne.':'Assistant unavailable offline: use the online version.')+'</div>';
-    } else {
-      document.getElementById('askErr').innerHTML='<div class="err">'+(fr?'Pas de réponse : ':'No answer: ')+esc((e&&e.message)||'')+'</div>';
-    }
+    var msg=(e&&e.needKey&&location.protocol==='file:')
+      ? (fr?'Assistant indisponible hors ligne : ouvre la version en ligne.':'Assistant unavailable offline: use the online version.')
+      : aiErr(e);
+    document.getElementById('askErr').innerHTML='<div class="err">'+esc(msg)+'</div>';
     for(var i=S.msgs.length-1;i>=0;i--){ if(S.msgs[i].role==='me'){S.msgs.splice(i,1);break;} }
   }).then(function(){
     ASKING=false; document.getElementById('askBtn').disabled=false; renderMsgs();
