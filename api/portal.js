@@ -1,4 +1,4 @@
-// PawCal — portail client (Stripe ou Paddle).
+// Scoopy — portail client (Stripe ou Paddle).
 // Une seule adresse qui donne à l'utilisateur : ses factures, le changement
 // de moyen de paiement, l'annulation en autonomie.
 // Réduit le support client à presque rien.

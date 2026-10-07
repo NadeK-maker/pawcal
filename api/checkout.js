@@ -1,4 +1,4 @@
-// PawCal — crée une session Stripe Checkout (mode abonnement).
+// Scoopy — crée une session Stripe Checkout (mode abonnement).
 //
 // Stripe héberge la page de paiement : aucune donnée de carte ne transite par
 // notre serveur ni par l'app. On renvoie simplement l'URL, le navigateur y va.
@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
       method: 'POST',
       body,
       // évite de créer deux abonnements sur un double-clic
-      idempotencyKey: `pawcal_${plan}_${email || 'anon'}_${Math.floor(Date.now() / 60000)}`
+      idempotencyKey: `scoopy_${plan}_${email || 'anon'}_${Math.floor(Date.now() / 60000)}`
     });
     return res.status(200).json({ url: session.url, id: session.id });
   } catch (e) {

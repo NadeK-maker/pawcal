@@ -1,4 +1,4 @@
-// PawCal — proxy serveur pour Google Gemini.
+// Scoopy — proxy serveur pour Google Gemini.
 // La clé API vit ici, côté serveur (variable d'environnement GEMINI_API_KEY).
 // Elle n'apparaît jamais dans le code envoyé aux utilisateurs.
 

@@ -1,4 +1,4 @@
-// PawCal — source de vérité de l'abonnement, interrogée par email.
+// Scoopy — source de vérité de l'abonnement, interrogée par email.
 //
 //   • l'utilisateur change de téléphone → il saisit son email → accès restauré
 //   • l'utilisateur annule → le prestataire le sait → l'app le sait au prochain

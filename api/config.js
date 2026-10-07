@@ -1,4 +1,4 @@
-// PawCal — configuration publique du paiement.
+// Scoopy — configuration publique du paiement.
 //
 // Le serveur décide seul quel prestataire est actif, en regardant quelles
 // variables d'environnement sont remplies. L'app n'a rien à savoir d'avance :

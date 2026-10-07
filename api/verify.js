@@ -1,4 +1,4 @@
-// PawCal — vérifie qu'une session Checkout est bien payée, au retour de Stripe.
+// Scoopy — vérifie qu'une session Checkout est bien payée, au retour de Stripe.
 // C'est le SERVEUR qui tranche : le navigateur ne peut pas se déclarer Premium.
 
 const { stripe, ACTIVE, cors } = require('./_stripe');
