@@ -1,4 +1,4 @@
-// PawCal — petit utilitaire partagé pour parler à l'API Stripe.
+// Scoopy — petit utilitaire partagé pour parler à l'API Stripe.
 // Aucune dépendance npm : on appelle l'API REST directement.
 
 const API = 'https://api.stripe.com/v1';
