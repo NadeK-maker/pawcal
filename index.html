@@ -275,6 +275,16 @@ label{display:block;font-size:13px;color:var(--muted);margin:4px 0 7px;font-weig
 /* graphe poids */
 .chart text{fill:var(--faint);font-size:11px;font-family:var(--font)}
 .chart .grid{stroke:var(--line)}
+/* compte Google */
+.gbtn{background:#fff;color:#1F1F1F;border:1px solid #DADCE0;box-shadow:none;font-weight:650}
+.gbtn svg{width:20px;height:20px}
+@media (prefers-color-scheme:dark){.gbtn{background:#131314;color:#E3E3E3;border-color:#8E918F}}
+.acct{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.acct img,.acct .ph{width:46px;height:46px;border-radius:50%;object-fit:cover;background:var(--surface2);flex:0 0 46px;
+  display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--accentInk)}
+.acct b{display:block;font-size:15px}
+.sync{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:650;color:var(--okInk)}
+.sync.err{color:var(--badInk)} .sync.wait{color:var(--muted)}
 /* accessibilité clavier */
 .chip:focus-visible,.btn:focus-visible,.iconbtn:focus-visible,.nb:focus-visible,.fab:focus-visible,.big2 div:focus-visible,.li:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
@@ -315,6 +325,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:4px 0 7px;font-weig
   <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/></symbol>
   <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></symbol>
   <symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></symbol>
+  <symbol id="g-logo" viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></symbol>
   <symbol id="i-bowl" viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M7.5 7c1-1 2-1 3 0s2 1 3 0 2-1 3 0"/></symbol>
 </svg>
 <div id="phone">
@@ -335,6 +346,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:4px 0 7px;font-weig
     </div>
   </div>
   <button class="btn" onclick="go('s1')" id="t_go">Commencer</button>
+  <button class="btn gbtn" onclick="welcomeSignIn()" id="b_gWelcome" style="display:none;margin-top:10px"><svg><use href="#g-logo"/></svg><span id="t_gHave">Continuer avec Google</span></button>
   <p class="small" style="text-align:center;margin:14px 0 0" id="t_disc">Ne remplace pas l'avis d'un vétérinaire.</p>
   <p class="small legal">
     <a href="terms.html" id="t_lterms">Conditions</a> ·
@@ -570,7 +582,8 @@ label{display:block;font-size:13px;color:var(--muted);margin:4px 0 7px;font-weig
     <button class="li" onclick="delPet()" id="b_delPet" style="display:none;color:var(--badInk)"><span class="ic"><svg class="i"><use href="#i-trash"/></svg></span><span class="grow" id="t_delPet">Supprimer cet animal</span></button>
   </div>
   <div class="lbl" id="t_accT">Compte</div>
-  <div class="card">
+  <div class="card" id="acctCloud" style="display:none"></div>
+  <div class="card" id="acctEmail">
     <p class="small" id="t_accHelp" style="margin:0 0 10px">Ton email sert de compte : il retrouve ton abonnement sur n'importe quel appareil.</p>
     <input id="i_email" type="email" placeholder="ton@email.com" autocomplete="email" style="margin-bottom:10px">
     <button class="btn ghost sm" onclick="saveEmail()" id="t_accSave">Enregistrer mon email</button>
@@ -643,9 +656,10 @@ function loadPet(i){
   if(p.day!==today())S.meals=[];          // le journal repart à zéro chaque jour
   S.cur=i;
 }
-function save(){
+function save(local){
   syncPet();
-  Store.set({pets:S.pets,cur:S.cur,lang:S.lang,species:S.species,name:S.name,w:S.w,age:S.age,ster:S.ster,act:S.act,goal:S.goal,
+  if(!local){ S.updatedAt=Date.now(); Cloud.dirty(); }
+  Store.set({updatedAt:S.updatedAt||0,syncedUid:S.syncedUid||null,pets:S.pets,cur:S.cur,lang:S.lang,species:S.species,name:S.name,w:S.w,age:S.age,ster:S.ster,act:S.act,goal:S.goal,
     idealW:S.idealW,target:S.target,meals:S.meals,weights:S.weights,scans:S.scans,chats:S.chats, msgs:S.msgs.slice(-30),premium:S.premium,key:S.key,email:S.email,lastCheck:S.lastCheck,day:today()});
 }
 function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
@@ -660,13 +674,196 @@ function restore(){
   S.imgs=[]; return true;
 }
 
+/* ============ COMPTE GOOGLE (Firebase) ============
+   Coller ici le bloc firebaseConfig de la console Firebase. Ces valeurs sont
+   publiques : elles identifient le projet, ce ne sont pas des secrets (la
+   sécurité vient des règles Firestore, voir firestore.rules). Tant que c'est
+   vide, l'app marche sans compte et les boutons Google restent cachés.
+
+   Données en ligne : un document users/{uid} par compte, avec les animaux
+   (profil, pesées, repas du jour, conversation), les compteurs gratuits et
+   l'heure de la dernière modification. Premium n'y est jamais écrit par l'app. */
+var FIREBASE_CONFIG = null;
+var FB_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
+
+var Cloud = (function(){
+  var auth=null, db=null, ready=null, timer=null, busy=false, pulling=Promise.resolve();
+  function load(src){
+    return new Promise(function(res,rej){
+      var sc=document.createElement('script'); sc.src=src; sc.onload=res;
+      sc.onerror=function(){rej(new Error('script'));}; document.head.appendChild(sc);
+    });
+  }
+  function on(){ return !!FIREBASE_CONFIG; }
+  /* Le SDK (≈ 200 Ko) ne se charge que si on en a besoin : connexion
+     demandée, ou compte déjà lié sur ce téléphone. */
+  function init(){
+    if(!on()) return Promise.reject(new Error('off'));
+    if(ready) return ready;
+    ready = load(FB_SDK+'firebase-app-compat.js')
+      .then(function(){ return Promise.all([load(FB_SDK+'firebase-auth-compat.js'), load(FB_SDK+'firebase-firestore-compat.js')]); })
+      .then(function(){
+        firebase.initializeApp(FIREBASE_CONFIG);
+        auth=firebase.auth(); db=firebase.firestore(); auth.languageCode=S.lang;
+        return auth.getRedirectResult().catch(function(){});
+      })
+      .then(function(){
+        return new Promise(function(res){
+          var first=true;
+          auth.onAuthStateChanged(function(u){ onUser(u).then(function(){ if(first){first=false;res(u);} }); });
+        });
+      });
+    ready.catch(function(){ ready=null; });
+    return ready;
+  }
+  function doc(){ return db.collection('users').doc(S.user.uid); }
+  function payload(){
+    var pets=JSON.parse(JSON.stringify(S.pets));
+    var o={v:1,pets:pets,cur:S.cur,scans:S.scans||0,chats:S.chats||0,updatedAt:S.updatedAt||Date.now()};
+    /* un document Firestore est limité à 1 Mo : au-delà on retire les vignettes */
+    if(JSON.stringify(o).length>800000) pets.forEach(function(p){(p.meals||[]).forEach(function(m){m.img=null;});});
+    return o;
+  }
+  function push(){
+    if(!S.user||!db||!S.species) return Promise.resolve();
+    clearTimeout(timer); setSync('wait');
+    return doc().set(payload()).then(function(){ setSync('ok'); }, function(e){ setSync('err'); throw e; });
+  }
+  function dirty(){
+    if(!S.user||busy) return;
+    clearTimeout(timer); timer=setTimeout(function(){ timer=null; push().catch(function(){}); },1200);
+  }
+  /* l'app passe en arrière-plan : on envoie tout de suite ce qui attendait */
+  function flush(){ if(timer){ clearTimeout(timer); timer=null; push().catch(function(){}); } }
+  function apply(d){
+    S.pets=d.pets||[]; S.cur=Math.min(d.cur||0,Math.max(0,S.pets.length-1));
+    S.scans=Math.max(S.scans||0,d.scans||0); S.chats=Math.max(S.chats||0,d.chats||0);
+    S.updatedAt=d.updatedAt||Date.now();
+    if(S.pets.length){ S.adding=false; S.editing=false; loadPet(S.cur); }
+  }
+  /* Rapproche ce téléphone et le compte.
+     - compte vide : on y envoie ce qu'il y a ici ;
+     - téléphone vide : on reprend le compte ;
+     - les deux remplis, compte déjà lié ici : le plus récent gagne ;
+     - les deux remplis, premier lien sur ce téléphone : on demande. */
+  function pull(){
+    if(!S.user) return Promise.resolve();
+    busy=true;
+    return doc().get().then(function(snap){
+      var d=snap.exists?snap.data():null, local=!!(S.species&&S.pets.length), fr=S.lang==='fr';
+      if(!d||!d.pets||!d.pets.length){ busy=false; S.syncedUid=S.user.uid; save(true); return local?push():null; }
+      if(!local){ apply(d); }
+      else if(d.updatedAt!==S.updatedAt){
+        var takeCloud = S.syncedUid===S.user.uid ? (d.updatedAt>(S.updatedAt||0))
+          : confirm(fr?'Ton compte contient déjà : '+names(d.pets)+'.\n\nOK : utiliser '+names(d.pets)+' sur ce téléphone.\nAnnuler : garder '+names(S.pets)+' et les enregistrer dans ton compte à la place.'
+                     :'Your account already has: '+names(d.pets)+'.\n\nOK: use '+names(d.pets)+' on this phone.\nCancel: keep '+names(S.pets)+' and save them to your account instead.');
+        if(takeCloud) apply(d);
+        else { busy=false; S.syncedUid=S.user.uid; save(true); return push(); }
+      }
+      busy=false; S.syncedUid=S.user.uid; save(true); setSync('ok');
+      if(S.species&&S.target){
+        applyLang();
+        if(['s0','s1','s2','s3'].indexOf(S.screen)>=0||S.screen==='home')showHome();
+        else if(S.screen==='set')showSet();
+      }
+    }).catch(function(e){ busy=false; setSync('err'); throw e; });
+  }
+  function names(ps){ return ps.map(function(p){return p.name;}).join(', '); }
+  function onUser(u){
+    S.user=u?{uid:u.uid,name:u.displayName||'',email:(u.email||'').toLowerCase(),photo:u.photoURL||''}:null;
+    if(S.user&&S.user.email&&!S.email){ S.email=S.user.email; save(true); revalidateNow(); }
+    renderAccount();
+    pulling=S.user?pull().catch(function(){}):Promise.resolve();
+    return pulling;
+  }
+  function signIn(){
+    var fr=S.lang==='fr';
+    return init().then(function(){
+      var p=new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account'});
+      return auth.signInWithPopup(p).catch(function(e){
+        var c=e&&e.code||'';
+        if(/popup-blocked|operation-not-supported|web-storage-unsupported/.test(c)){
+          try{sessionStorage.setItem('scoopy_redirect','1');}catch(x){}
+          return auth.signInWithRedirect(p);
+        }
+        if(/popup-closed|cancelled-popup/.test(c)) return null;
+        throw e;
+      });
+    }).then(function(r){
+      /* on attend que le compte soit rapproché avant de choisir l'écran */
+      return r ? new Promise(function(ok){ setTimeout(ok,0); }).then(function(){ return pulling; }) : null;
+    }).catch(function(e){
+      alert((fr?'Connexion impossible : ':'Sign-in failed: ')+((e&&(e.code||e.message))||''));
+    });
+  }
+  function signOut(){
+    if(!auth) return;
+    var fr=S.lang==='fr';
+    if(!confirm(fr?'Se déconnecter ? Tes animaux restent sur ce téléphone.':'Sign out? Your pets stay on this phone.'))return;
+    push().catch(function(){}).then(function(){ return auth.signOut(); }).then(function(){
+      S.syncedUid=null; save(true); renderAccount();
+    });
+  }
+  function deleteAccount(){
+    var fr=S.lang==='fr';
+    if(!S.user||!confirm(fr?'Supprimer ton compte Scoopy et toutes les données enregistrées en ligne ? Les données de ce téléphone restent.'
+                          :'Delete your Scoopy account and all data stored online? Data on this phone stays.'))return;
+    var u=auth.currentUser;
+    doc().delete().then(function(){ return u.delete(); }).catch(function(e){
+      if(e&&e.code==='auth/requires-recent-login')
+        return u.reauthenticateWithPopup(new firebase.auth.GoogleAuthProvider()).then(function(){ return doc().delete(); }).then(function(){ return u.delete(); });
+      throw e;
+    }).then(function(){
+      S.syncedUid=null; save(true); renderAccount();
+      alert(fr?'Compte supprimé.':'Account deleted.');
+    }).catch(function(e){ alert((fr?'Suppression impossible : ':'Could not delete: ')+((e&&(e.code||e.message))||'')); });
+  }
+  function resume(){
+    /* au retour sur l'app : on récupère ce qui a changé sur un autre appareil */
+    if(S.user&&db&&!busy) pull().catch(function(){});
+  }
+  return {on:on,init:init,dirty:dirty,flush:flush,push:push,pull:pull,signIn:signIn,signOut:signOut,deleteAccount:deleteAccount,resume:resume};
+})();
+
+var SYNC='';
+function setSync(st){ SYNC=st; var el=document.getElementById('syncState'); if(el)renderAccount(); }
+/* Carte « Compte » des réglages : connecté, déconnecté, ou sans Firebase. */
+function renderAccount(){
+  var fr=S.lang==='fr', box=document.getElementById('acctCloud'), em=document.getElementById('acctEmail');
+  var gw=document.getElementById('b_gWelcome'); if(gw) gw.style.display=Cloud.on()?'flex':'none';
+  if(!box) return;
+  if(!Cloud.on()){ box.style.display='none'; em.style.display=''; return; }
+  box.style.display=''; em.style.display='none';
+  if(!S.user){
+    box.innerHTML='<p class="small" style="margin:0 0 12px">'+(fr?'Connecte-toi pour sauvegarder tes animaux et les retrouver sur tous tes appareils.':'Sign in to back up your pets and find them on all your devices.')+'</p>'+
+      '<button class="btn gbtn sm" onclick="Cloud.signIn()"><svg><use href="#g-logo"/></svg>'+(fr?'Continuer avec Google':'Continue with Google')+'</button>';
+    return;
+  }
+  var u=S.user, init=(u.name||u.email||'?').charAt(0).toUpperCase();
+  var st=SYNC==='err'?'<span class="sync err" id="syncState">'+(fr?'⚠︎ Sauvegarde en échec, nouvel essai à la prochaine modification':'⚠︎ Backup failed, will retry on next change')+'</span>'
+        :SYNC==='wait'?'<span class="sync wait" id="syncState">'+(fr?'Sauvegarde…':'Saving…')+'</span>'
+        :'<span class="sync" id="syncState">✓ '+(fr?'Sauvegardé dans ton compte':'Backed up to your account')+'</span>';
+  box.innerHTML='<div class="acct">'+(u.photo?'<img src="'+esc(u.photo)+'" alt="" referrerpolicy="no-referrer">':'<div class="ph">'+esc(init)+'</div>')+
+    '<div style="min-width:0"><b>'+esc(u.name||u.email)+'</b><span class="small">'+esc(u.email)+'</span></div></div>'+st+
+    '<button class="btn ghost sm" style="margin-top:12px" onclick="Cloud.signOut()">'+(fr?'Se déconnecter':'Sign out')+'</button>'+
+    '<button class="btn danger sm" style="margin-top:8px" onclick="Cloud.deleteAccount()">'+(fr?'Supprimer mon compte':'Delete my account')+'</button>';
+}
+/* Depuis l'accueil : si le compte contient des animaux, on va droit au journal ;
+   sinon on enchaîne sur la création du profil. */
+function welcomeSignIn(){
+  Cloud.signIn().then(function(){
+    if(!S.user) return;
+    if(S.species&&S.target){ applyLang(); showHome(); } else go('s1');
+  });
+}
+
 /* ============ TRADUCTIONS ============ */
 var T = {
  t_tag:["Le compteur de calories de ton chien et de ton chat.","The calorie counter for your dog and cat."],
  t_p1:["Une photo de la gamelle","One photo of the bowl"], t_p1s:["Scoopy reconnaît la nourriture et compte les calories.","Scoopy recognises the food and counts the calories."],
  t_p2:["Sa ration idéale","Their ideal portion"], t_p2s:["Calculée avec les formules vétérinaires (NRC / WSAVA).","Calculated with veterinary formulas (NRC / WSAVA)."],
  t_p3:["Un assistant toujours là","An assistant, any time"], t_p3s:["Nutrition, poids, comportement : pose tes questions.","Nutrition, weight, behaviour: ask anything."],
- t_go:["Commencer","Get started"],
+ t_go:["Commencer","Get started"], t_gHave:["Continuer avec Google","Continue with Google"],
  t_disc:["Ne remplace pas l'avis d'un vétérinaire.","Not a substitute for a vet's advice."],
  t_lterms:["Conditions","Terms"], t_lpriv:["Confidentialité","Privacy"], t_lref:["Remboursements","Refunds"],
  t_lterms2:["Conditions","Terms"], t_lpriv2:["Confidentialité","Privacy"], t_lref2:["Remboursements","Refunds"],
@@ -776,7 +973,7 @@ function show(id){
 function navSel(n){for(var i=1;i<=4;i++){var e=document.getElementById('n'+i); if(e)e.className='nb'+(n===i?' on':'');}}
 function showHome(){show('home');navSel(1);renderHome();}
 function showWeight(){show('wt');navSel(2);drawChart();}
-function showSet(){show('set');navSel(4);renderPet();}
+function showSet(){show('set');navSel(4);renderPet();renderAccount();}
 function showScan(){
   document.getElementById('result').innerHTML='';document.getElementById('scanErr').innerHTML='';
   show('scan');navSel(0);renderStrip();
@@ -1972,7 +2169,9 @@ function addMeal(title,kcal,detail){
 }
 function resetAll(){
   if(!confirm(S.lang==='fr'?'Effacer le profil, le journal et l\'historique de poids ?':'Erase profile, log and weight history?'))return;
-  Store.clear(); location.href=location.pathname;
+  Store.clear();
+  try{ if(window.firebase&&firebase.apps&&firebase.apps.length) firebase.auth().signOut(); }catch(e){}
+  location.href=location.pathname;
 }
 
 /* L'app peut rester ouverte en arrière-plan : au retour, si la date a changé,
@@ -1983,7 +2182,7 @@ function checkDay(){
   if(!S.target)return;
   S.meals=[]; save(); renderHome();
 }
-document.addEventListener('visibilitychange',function(){ if(!document.hidden)checkDay(); });
+document.addEventListener('visibilitychange',function(){ if(document.hidden) Cloud.flush(); else { checkDay(); Cloud.resume(); } });
 window.addEventListener('focus',checkDay);
 
 /* ============ INIT ============ */
@@ -1999,6 +2198,10 @@ window.addEventListener('focus',checkDay);
   }
   renderStrip();
   renderPayState();
+  renderAccount();
+  /* compte déjà lié sur ce téléphone, ou retour d'une connexion par redirection */
+  var redir=false; try{redir=sessionStorage.getItem('scoopy_redirect')==='1';sessionStorage.removeItem('scoopy_redirect');}catch(e){}
+  if(Cloud.on()&&(S.syncedUid||redir)) Cloud.init().catch(function(){});
   if(location.protocol!=='file:'){ loadPayCfg(); checkReturn(); }
   revalidate();
 })();
