@@ -192,7 +192,8 @@ a{color:var(--accent2)}
 
 <!-- ========== 1. ESPÈCE ========== -->
 <div class="scr" id="s1">
-  <div class="top"><span class="small" id="t_step1">Étape 1 / 4</span></div>
+  <div class="top"><span class="small" id="t_step1">Étape 1 / 4</span>
+    <button class="lang" id="b_cancelAdd" style="display:none" onclick="cancelAdd()">✕</button></div>
   <h1 id="t_q1">Qui allons-nous suivre ?</h1>
   <p id="t_q1s">La science nutritionnelle est différente pour le chien et pour le chat.</p>
   <div class="big2">
@@ -268,6 +269,7 @@ a{color:var(--accent2)}
       <button class="lang" onclick="show('set')">⚙︎</button>
     </div>
   </div>
+  <div class="chips" id="petBar" style="margin:4px 0 0"></div>
   <div class="ringwrap">
     <div class="ring">
       <svg width="210" height="210">
@@ -417,6 +419,7 @@ a{color:var(--accent2)}
   <div class="card" style="margin-top:16px">
     <h2 id="t_petT">L'animal</h2>
     <div class="small" id="o_pet"></div>
+    <button class="btn ghost sm" style="margin-top:10px;display:none" onclick="delPet()" id="b_delPet">Supprimer cet animal</button>
   </div>
   <div class="card" style="margin-top:16px">
     <h2 id="t_accT">Compte</h2>
@@ -454,7 +457,8 @@ a{color:var(--accent2)}
 var S = {
   lang:'fr', species:null, name:'', w:0, age:0, ster:null, act:'norm', goal:'keep',
   target:0, meals:[], weights:[], scans:0, premium:false, mode:'bowl', plan:'year',
-  key:'', imgs:[], screen:'s0', day:'', idealW:0, email:'', lastCheck:0, chats:0, msgs:[]
+  key:'', imgs:[], screen:'s0', day:'', idealW:0, email:'', lastCheck:0, chats:0, msgs:[],
+  pets:[], cur:0, adding:false
 };
 /* ---- Paiement temporairement coupé -------------------------------------
    Paddle est en pause (vérification du compte). En attendant Stripe, on
@@ -477,15 +481,32 @@ var Store = (function(){
     clear:function(){ if(!ok)return; try{window.localStorage.removeItem('pawcal');}catch(e){} }
   };
 })();
+/* ---- Plusieurs animaux ------------------------------------------------
+   L'animal affiché vit directement dans S (S.name, S.meals...). S.pets garde
+   une copie de chaque animal ; on échange les champs quand on change d'animal. */
+var PET_KEYS=['species','name','w','age','ster','act','goal','idealW','target','meals','weights','msgs'];
+function petSnap(){var o={};for(var i=0;i<PET_KEYS.length;i++)o[PET_KEYS[i]]=S[PET_KEYS[i]];o.day=today();return o;}
+function syncPet(){ if(!S.species||S.adding)return; S.pets[S.cur]=petSnap(); }
+function loadPet(i){
+  var p=S.pets[i]; if(!p)return;
+  for(var k=0;k<PET_KEYS.length;k++){var key=PET_KEYS[k]; if(p[key]!==undefined)S[key]=p[key];}
+  if(!S.msgs)S.msgs=[];
+  if(p.day!==today())S.meals=[];          // le journal repart à zéro chaque jour
+  S.cur=i;
+}
 function save(){
-  Store.set({lang:S.lang,species:S.species,name:S.name,w:S.w,age:S.age,ster:S.ster,act:S.act,goal:S.goal,
+  syncPet();
+  Store.set({pets:S.pets,cur:S.cur,lang:S.lang,species:S.species,name:S.name,w:S.w,age:S.age,ster:S.ster,act:S.act,goal:S.goal,
     idealW:S.idealW,target:S.target,meals:S.meals,weights:S.weights,scans:S.scans,chats:S.chats, msgs:S.msgs.slice(-30),premium:S.premium,key:S.key,email:S.email,lastCheck:S.lastCheck,day:today()});
 }
 function today(){var d=new Date();return d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();}
 function restore(){
-  var o=Store.get(); if(!o||!o.species)return false;
+  var o=Store.get(); if(!o||(!o.species&&!(o.pets&&o.pets.length)))return false;
   for(var k in o){ if(k!=='day') S[k]=o[k]; }
   if(o.day!==today()) S.meals=[];          // le journal repart à zéro chaque jour
+  S.adding=false;
+  if(!S.pets||!S.pets.length){S.pets=[];S.cur=0;syncPet();}   // ancien format : un seul animal
+  else loadPet(S.cur<S.pets.length?S.cur:0);
   S.imgs=[]; return true;
 }
 
@@ -549,6 +570,7 @@ var T = {
  goPremium:["⭐ Passer Premium — scans illimités","⭐ Go Premium — unlimited scans"],
  t_up1:["Passe en illimité","Go unlimited"],
  t_up2:["Scans illimités, plusieurs animaux — 3,33 €/mois","Unlimited scans, multiple pets — €3.33/month"],
+ t_addPet:["Ajouter","Add"], b_delPet:["Supprimer cet animal","Delete this pet"],
  t_setT:["Réglages","Settings"], t_saveKey:["Enregistrer","Save"], t_petT:["L'animal","The pet"],
  t_manT:["Ajout rapide sans photo","Quick add without photo"], t_manAdd:["Ajouter au journal","Add to log"],
  t_reset:["Tout réinitialiser","Reset everything"], t_n1:["Journal","Log"], t_n2:["Poids","Weight"],
@@ -590,7 +612,7 @@ function showScan(){
   document.getElementById('result').innerHTML='';document.getElementById('scanErr').innerHTML='';
   show('scan');navSel(0);renderStrip();
 }
-function openApp(){show('home');navSel(1);renderHome();}
+function openApp(){document.getElementById('b_cancelAdd').style.display='none';show('home');navSel(1);renderHome();}
 function closePw(){show(S.meals.length||true?'home':'home');navSel(1);}
 function showPw(){show('pw');renderPayState();}
 function pickPlan(p){S.plan=p;
@@ -892,6 +914,7 @@ function finishOnb(){
   if(!S.ster)S.ster='y';
   computeTarget();
   S.weights=[{d:Date.now(),kg:S.w}];
+  if(S.adding){S.adding=false;S.cur=S.pets.length;S.meals=[];S.msgs=[];}
   save();
   document.getElementById('o_kcal').textContent=S.target;
   var r=Math.round(rer(S.w)), f=factor().toFixed(2);
@@ -915,6 +938,7 @@ function renderHome(){
   document.getElementById('st_eat').textContent=e;
   document.getElementById('st_tgt').textContent=S.target;
   document.getElementById('st_w').textContent=S.w?S.w+' kg':'—';
+  renderPetBar();
   var d=new Date();
   document.getElementById('h_date').textContent=d.toLocaleDateString(S.lang==='fr'?'fr-FR':'en-US',{weekday:'long',day:'numeric',month:'long'});
   var h='';
@@ -929,6 +953,45 @@ function renderHome(){
   var up=document.getElementById('upsell'); if(up)up.style.display=S.premium?'none':'block';
   drawChart(); renderPet();
 }
+function petEmoji(sp){return sp==='cat'?'🐈':'🐕';}
+function renderPetBar(){
+  var el=document.getElementById('petBar'); if(!el)return;
+  var h='';
+  for(var i=0;i<S.pets.length;i++){
+    h+='<div class="chip'+(i===S.cur?' sel':'')+'" onclick="switchPet('+i+')">'+petEmoji(S.pets[i].species)+' '+esc(S.pets[i].name)+'</div>';
+  }
+  h+='<div class="chip" onclick="addPet()" title="'+T.t_addPet[L()]+'">＋ '+T.t_addPet[L()]+'</div>';
+  el.innerHTML=h;
+}
+function switchPet(i){
+  if(i===S.cur)return;
+  syncPet(); loadPet(i); save();
+  var r=document.getElementById('result'); if(r)r.innerHTML='';
+  applyLang();
+}
+/* Gratuit : un animal. Premium : autant que l'on veut. */
+function addPet(){
+  if(!S.premium&&S.pets.length>=1){showPw();return;}
+  syncPet(); S.adding=true;
+  S.species=null; S.name=''; S.w=0; S.age=0; S.ster=null; S.act='norm'; S.goal='keep';
+  S.idealW=0; S.target=0; S.meals=[]; S.weights=[]; S.msgs=[];
+  ['i_name','i_w','i_age'].forEach(function(id){var x=document.getElementById(id);if(x)x.value='';});
+  document.getElementById('sp_dog').className=''; document.getElementById('sp_cat').className='';
+  ['c_ster','c_act','c_goal'].forEach(function(id){var c=document.getElementById(id).children;for(var j=0;j<c.length;j++)c[j].className='chip';});
+  document.getElementById('b_cancelAdd').style.display='';
+  show('s1');
+}
+function cancelAdd(){
+  S.adding=false; loadPet(S.cur);
+  document.getElementById('b_cancelAdd').style.display='none';
+  applyLang(); showHome();
+}
+function delPet(){
+  if(S.pets.length<2)return;
+  var fr=S.lang==='fr';
+  if(!confirm(fr?'Supprimer '+S.name+' et tout son historique ?':'Delete '+S.name+' and all their history?'))return;
+  S.pets.splice(S.cur,1); loadPet(0); save(); applyLang(); showHome();
+}
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
 function delMeal(i){S.meals.splice(i,1);save();renderHome();}
 function renderSub(){
@@ -941,6 +1004,7 @@ function renderSub(){
 }
 function renderPet(){
   renderSub();
+  var dp=document.getElementById('b_delPet'); if(dp)dp.style.display=S.pets.length>1?'block':'none';
   var el=document.getElementById('o_pet'); if(!el||!S.name)return;
   var fr=S.lang==='fr';
   el.innerHTML=S.name+' · '+(S.species==='dog'?(fr?'chien':'dog'):(fr?'chat':'cat'))+' · '+S.w+' kg · '+S.age+(fr?' ans':' y')+'<br>'+
