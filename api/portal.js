@@ -7,6 +7,7 @@
 // dashboard.stripe.com → Settings → Billing → Customer portal → Activate.
 
 const { stripe } = require('./_stripe');
+const { dodo, dodoOn } = require('./_dodo');
 
 async function paddle(path, opts = {}) {
   const key = (process.env.PADDLE_API_KEY || '').trim();
@@ -37,6 +38,18 @@ module.exports = async (req, res) => {
   const hasStripe = !!(process.env.STRIPE_SECRET_KEY || '').trim();
 
   try {
+    // Dodo : portail client (factures, carte, annulation)
+    if (dodoOn()) {
+      const customers = await dodo('/customers', { query: { email, page_size: 10 } });
+      const c = (customers.items || []).find(x => String(x.email || '').toLowerCase() === email);
+      if (!c) return res.status(404).json({ error: 'Aucun compte trouvé pour cet email' });
+      const session = await dodo(`/customers/${encodeURIComponent(c.customer_id)}/customer-portal/session`, {
+        method: 'POST', query: { return_url: base }
+      });
+      if (!session.link) return res.status(502).json({ error: 'portail indisponible' });
+      return res.status(200).json({ url: session.link });
+    }
+
     if (hasStripe) {
       const customers = await stripe(`/customers?email=${encodeURIComponent(email)}&limit=1`);
       if (!customers.data || !customers.data.length) {

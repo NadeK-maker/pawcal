@@ -539,11 +539,11 @@ label{display:block;font-size:13px;color:var(--muted);margin:4px 0 7px;font-weig
   </div>
   <div class="plan sel" id="p_year" onclick="pickPlan('year')">
     <span class="tag" id="t_save">-58%</span>
-    <b id="t_pyr">12 mois</b><span class="pr">39,99 €</span>
-    <div class="small" id="t_pyr2">3,33 € / mois — 7 jours d'essai gratuit</div>
+    <b id="t_pyr">12 mois</b><span class="pr" id="pr_year">39,99 $US</span>
+    <div class="small" id="t_pyr2">3,33 $US / mois — 7 jours d'essai gratuit</div>
   </div>
   <div class="plan" id="p_mon" onclick="pickPlan('mon')">
-    <b id="t_pmo">1 mois</b><span class="pr">7,99 €</span>
+    <b id="t_pmo">1 mois</b><span class="pr" id="pr_mon">7,99 $US</span>
     <div class="small" id="t_pmo2">Sans engagement</div>
   </div>
   <div id="pwErr"></div>
@@ -916,7 +916,7 @@ var T = {
  t_f4:["Rapport PDF à donner au vétérinaire","PDF report for your vet"],
  t_f5:["Alertes ingrédients toxiques","Toxic ingredient alerts"],
  t_f6:["Assistant IA illimité, spécialisé chiens et chats","Unlimited AI assistant, dogs and cats specialist"],
- t_pyr:["12 mois","12 months"], t_pyr2:["3,33 € / mois — 7 jours d'essai gratuit","€3.33 / month — 7-day free trial"],
+ t_pyr:["12 mois","12 months"], t_pyr2:["3,33 $US / mois — 7 jours d'essai gratuit","$3.33 / month — 7-day free trial"],
  t_pmo:["1 mois","1 month"], t_pmo2:["Sans engagement","Cancel anytime"],
  t_cta:["Continuer","Continue"],
  t_offT:["Paiement bientôt disponible","Payments coming soon"],
@@ -1025,12 +1025,14 @@ var PAY_CFG=null, PADDLE_READY=false, PROVIDER='none';
 
 /* Le serveur dit quel prestataire est branché. Le jour où les variables
    Stripe sont posées dans Vercel, /api/config répond provider:'stripe' et
-   le paiement se rallume tout seul — aucune ligne à changer ici. */
+   le paiement se rallume tout seul — aucune ligne à changer ici.
+   Même chose pour Dodo Payments, qui passe en premier s'il est configuré. */
 function loadPayCfg(){
   if(PAY_CFG) return Promise.resolve(PAY_CFG);
   return fetch('/api/config').then(function(r){return r.json();}).then(function(cfg){
     PAY_CFG=cfg; PROVIDER=cfg.provider||'none';
-    if(PROVIDER==='stripe') PAY_OFF=false;
+    if(PROVIDER==='stripe'||PROVIDER==='dodo') PAY_OFF=false;
+    if(cfg.prices) renderPrices(cfg);
     renderPayState();
     return cfg;
   }).catch(function(){ return {provider:'none',configured:false}; });
@@ -1103,6 +1105,28 @@ function afterPurchase(){
   }
   poll();
 }
+/* Prix réels venus du prestataire (Dodo) : l'écran Premium affiche
+   exactement ce que le client paiera, dans la bonne monnaie. */
+function renderPrices(cfg){
+  var y=cfg.prices&&cfg.prices.year, m=cfg.prices&&cfg.prices.month;
+  if(!y||!m||y.currency!==m.currency) return;
+  function fmt(v,fr){
+    try{
+      var f=new Intl.NumberFormat(fr?'fr-FR':'en-US',{style:'currency',currency:y.currency});
+      var d=f.resolvedOptions().maximumFractionDigits;
+      return f.format(v/Math.pow(10,d));
+    }catch(e){ return (v/100).toFixed(2)+' '+y.currency; }
+  }
+  var fr=S.lang==='fr', trial=cfg.trialDays||0;
+  var py=document.getElementById('pr_year'), pm=document.getElementById('pr_mon'), sv=document.getElementById('t_save');
+  if(py) py.textContent=fmt(y.amount,fr);
+  if(pm) pm.textContent=fmt(m.amount,fr);
+  var save=Math.round(100*(1-y.amount/(12*m.amount)));
+  if(sv){ sv.textContent='-'+save+'%'; sv.style.display=save>0?'':'none'; }
+  T.t_pyr2=[fmt(y.amount/12,true)+' / mois'+(trial?' — '+trial+' jours d\'essai gratuit':''),
+            fmt(y.amount/12,false)+' / month'+(trial?' — '+trial+'-day free trial':'')];
+  var el=document.getElementById('t_pyr2'); if(el) el.textContent=T.t_pyr2[L()];
+}
 /* Bascule l'écran Premium en mode « paiement coupé ». */
 function renderPayState(){
   var off=document.getElementById('payOff'), on=document.getElementById('payOn');
@@ -1146,9 +1170,9 @@ function askCode(){
     if(el)el.innerHTML='<div class="err">'+T.t_codeBad[L()]+'</div>';
   }
 }
-/* Stripe Checkout : page hébergée par Stripe, aucune donnée de carte ne
-   passe par nous. On demande l'URL au serveur puis on y envoie le navigateur. */
-function stripeCheckout(){
+/* Page de paiement hébergée (Dodo Payments ou Stripe) : aucune donnée de
+   carte ne passe par nous. On demande l'URL au serveur puis on y va. */
+function hostedCheckout(){
   var fr=S.lang==='fr', b=document.getElementById('t_cta');
   b.disabled=true; b.innerHTML='<span class="spin"></span>'+(fr?'Ouverture du paiement...':'Opening checkout...');
   return fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
@@ -1162,13 +1186,21 @@ function stripeCheckout(){
       esc(e.message||'')+'</div>';
   });
 }
-/* Retour depuis Stripe : ?paid=1 dans l'URL → on confirme auprès du serveur. */
+/* Retour du paiement : ?paid=1 dans l'URL → on confirme auprès du serveur.
+   Stripe renvoie session_id ; Dodo renvoie subscription_id, status et email. */
 function checkReturn(){
   if(location.search.indexOf('paid=1')<0) return;
-  var m=location.search.match(/[?&]session_id=([^&]+)/);
+  var q=new URLSearchParams(location.search), fr=S.lang==='fr';
+  var sid=q.get('session_id'), sub=q.get('subscription_id'), st=q.get('status'), em=q.get('email');
   history.replaceState({}, '', location.pathname);
-  if(!m){ if(S.email) afterPurchase(); return; }
-  fetch('/api/verify?session_id='+m[1]).then(function(r){return r.json();}).then(function(j){
+  if(em&&!S.email){ S.email=String(em).trim().toLowerCase(); save(); }
+  if(/^(failed|cancelled|expired)$/.test(st||'')){
+    alert(fr?'Le paiement n\'a pas abouti. Aucun montant n\'a été prélevé, tu peux réessayer.':'The payment did not go through. You were not charged, you can try again.');
+    return;
+  }
+  if(!sid&&!sub){ if(S.email) afterPurchase(); return; }
+  var url=sub?'/api/verify?subscription_id='+encodeURIComponent(sub):'/api/verify?session_id='+encodeURIComponent(sid);
+  fetch(url).then(function(r){return r.json();}).then(function(j){
     if(j.premium===true){
       if(j.email)S.email=String(j.email).toLowerCase();
       S.premium=true;S.lastCheck=Date.now();save();showHome();
@@ -1190,9 +1222,9 @@ function askEmailOnce(){
 }
 function fakeBuy(){
   if(PAY_OFF){renderPayState();return;}
-  if(PROVIDER==='stripe'){
+  if(PROVIDER==='stripe'||PROVIDER==='dodo'){
     if(!askEmailOnce())return;
-    return stripeCheckout();
+    return hostedCheckout();
   }
   var fr=S.lang==='fr', b=document.getElementById('t_cta');
   if(!askEmailOnce())return;

@@ -12,6 +12,25 @@
 //                       sinon chaque session échoue
 
 const { stripe, cors } = require('./_stripe');
+const { dodo, dodoOn, env } = require('./_dodo');
+
+// Dodo Payments : page de paiement hébergée par Dodo (cartes du monde entier).
+// Au retour, Dodo ajoute ?subscription_id=...&status=...&email=... à l'URL.
+async function dodoCheckout({ plan, origin, email }, req) {
+  const base = origin || `https://${req.headers.host}`;
+  const trial = parseInt(process.env.TRIAL_DAYS || '7', 10);
+  const body = {
+    product_cart: [{ product_id: env(plan === 'mon' ? 'DODO_PRODUCT_MONTH' : 'DODO_PRODUCT_YEAR'), quantity: 1 }],
+    return_url: `${base}/?paid=1`,
+    cancel_url: `${base}/?checkout=cancelled`,
+    metadata: { app: 'scoopy', plan: plan === 'mon' ? 'mon' : 'year' }
+  };
+  if (email) body.customer = { email: String(email).trim().toLowerCase() };
+  if (trial > 0) body.subscription_data = { trial_period_days: trial };
+  const s = await dodo('/checkouts', { method: 'POST', body });
+  if (!s.checkout_url) throw new Error('Dodo n\'a pas renvoyé de page de paiement');
+  return { url: s.checkout_url, id: s.session_id };
+}
 
 module.exports = async (req, res) => {
   cors(res);
@@ -19,6 +38,14 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'POST only' });
 
   const { plan, lang, origin, email } = req.body || {};
+
+  if (dodoOn()) {
+    try {
+      return res.status(200).json(await dodoCheckout({ plan, origin, email }, req));
+    } catch (e) {
+      return res.status(502).json({ error: e.message });
+    }
+  }
 
   const price = ((plan === 'mon'
     ? process.env.STRIPE_PRICE_MONTH

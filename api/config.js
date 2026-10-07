@@ -5,7 +5,10 @@
 // le jour où les clés Stripe sont posées dans Vercel, le paiement s'allume
 // tout seul, sans toucher au code.
 //
-// Ordre de priorité : Stripe > Paddle > aucun.
+// Ordre de priorité : Dodo Payments > Stripe > Paddle > aucun.
+//
+// Variables Vercel — Dodo Payments (vendeur à Djibouti), voir api/_dodo.js :
+//   DODO_API_KEY, DODO_PRODUCT_YEAR, DODO_PRODUCT_MONTH, DODO_ENV=test (optionnel)
 //
 // Variables Vercel — Stripe (à remplir au Canada) :
 //   STRIPE_SECRET_KEY    sk_live_... (ou sk_test_... pour essayer)
@@ -15,9 +18,41 @@
 // Variables Vercel — Paddle (héritage, en pause) :
 //   PADDLE_ENV, PADDLE_CLIENT_TOKEN, PADDLE_PRICE_YEAR, PADDLE_PRICE_MONTH
 
-module.exports = (req, res) => {
+const { dodo, dodoOn, env } = require('./_dodo');
+
+// Prix réel d'un produit Dodo, pour que l'écran Premium affiche exactement
+// ce que le client paiera (montant en plus petite unité : centimes, etc.).
+function priceOf(p) {
+  return p && p.price && typeof p.price.price === 'number'
+    ? { amount: p.price.price, currency: p.price.currency }
+    : null;
+}
+
+module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Cache-Control', 'no-store');
+
+  if (dodoOn()) {
+    let prices = null;
+    try {
+      const [y, m] = await Promise.all([
+        dodo(`/products/${encodeURIComponent(env('DODO_PRODUCT_YEAR'))}`),
+        dodo(`/products/${encodeURIComponent(env('DODO_PRODUCT_MONTH'))}`)
+      ]);
+      prices = { year: priceOf(y), month: priceOf(m) };
+    } catch (e) {
+      prices = null;   // l'app garde alors les prix affichés par défaut
+    }
+    // Les prix changent rarement : Vercel peut garder la réponse 5 minutes.
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    return res.status(200).json({
+      provider: 'dodo',
+      configured: true,
+      live: env('DODO_ENV') !== 'test',
+      trialDays: parseInt(process.env.TRIAL_DAYS || '7', 10) || 0,
+      prices
+    });
+  }
 
   const sk = (process.env.STRIPE_SECRET_KEY || '').trim();
   const sYear = (process.env.STRIPE_PRICE_YEAR || '').trim();

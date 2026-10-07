@@ -5,15 +5,32 @@
 //     contrôle quotidien
 //
 // On ne stocke aucune base de données : le prestataire de paiement fait foi.
-// Stripe est utilisé s'il est configuré, sinon Paddle (héritage).
+// Ordre : Dodo Payments, puis Stripe, puis Paddle (héritage).
 //
 // Variables d'environnement Vercel :
+//   DODO_API_KEY + DODO_PRODUCT_YEAR + DODO_PRODUCT_MONTH → mode Dodo
 //   STRIPE_SECRET_KEY   → mode Stripe
 //   PADDLE_API_KEY + PADDLE_ENV → mode Paddle
 
 // Statuts qui donnent accès : actif, en essai, et impayé en période de grâce
 // (on ne coupe pas un client pour un simple raté de carte).
 const ACTIVE = new Set(['active', 'trialing', 'past_due']);
+
+const { dodoOn, activeByEmail } = require('./_dodo');
+
+/* -------------------------------- DODO -------------------------------- */
+async function viaDodo(email) {
+  const found = await activeByEmail(email);
+  if (!found) return { premium: false, reason: 'no_active_subscription' };
+  return {
+    premium: true,
+    provider: 'dodo',
+    status: found.sub.status,
+    customer_id: found.customer_id,
+    current_period_end: found.sub.next_billing_date || null,
+    cancel_at_period_end: !!found.sub.cancel_at_next_billing_date
+  };
+}
 
 /* ------------------------------- STRIPE ------------------------------- */
 async function stripeGet(path) {
@@ -91,14 +108,16 @@ module.exports = async (req, res) => {
     return res.status(400).json({ premium: false, error: 'email invalide' });
   }
 
+  const hasDodo = dodoOn();
   const hasStripe = !!(process.env.STRIPE_SECRET_KEY || '').trim();
   const hasPaddle = !!(process.env.PADDLE_API_KEY || '').trim();
-  if (!hasStripe && !hasPaddle) {
+  if (!hasDodo && !hasStripe && !hasPaddle) {
     return res.status(200).json({ premium: false, reason: 'no_provider' });
   }
 
   try {
-    const out = hasStripe ? await viaStripe(email) : await viaPaddle(email);
+    const out = hasDodo ? await viaDodo(email)
+      : hasStripe ? await viaStripe(email) : await viaPaddle(email);
     return res.status(200).json(out);
   } catch (e) {
     // Prestataire injoignable → on renvoie "inconnu" : l'app garde l'état
