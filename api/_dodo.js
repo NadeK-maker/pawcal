@@ -45,6 +45,7 @@ async function dodo(path, { method = 'GET', body, query } = {}) {
   if (!r.ok) {
     const e = new Error((j && (j.message || j.error || j.code)) || `Dodo HTTP ${r.status}`);
     e.status = r.status;
+    e.code = j && j.code;
     throw e;
   }
   return j;

@@ -1177,13 +1177,14 @@ function hostedCheckout(){
   b.disabled=true; b.innerHTML='<span class="spin"></span>'+(fr?'Ouverture du paiement...':'Opening checkout...');
   return fetch('/api/checkout',{method:'POST',headers:{'Content-Type':'application/json'},
     body:JSON.stringify({plan:S.plan,lang:S.lang,email:S.email,origin:location.origin})})
-  .then(function(r){return r.json().then(function(j){if(!r.ok)throw new Error(j.error||('HTTP '+r.status));return j;});})
+  .then(function(r){return r.json().then(function(j){if(!r.ok){var x=new Error(j.error||('HTTP '+r.status));x.code=j.code;throw x;}return j;});})
   .then(function(j){ if(!j.url) throw new Error('url manquante'); location.href=j.url; })
   .catch(function(e){
     b.disabled=false; b.textContent=T.t_cta[L()];
-    document.getElementById('pwErr').innerHTML='<div class="err">'+
-      (fr?'Paiement momentanément indisponible. ':'Checkout temporarily unavailable. ')+
-      esc(e.message||'')+'</div>';
+    document.getElementById('pwErr').innerHTML='<div class="err">'+(e.code==='not_live'
+      ? (fr?'Le paiement en ligne ouvre très bientôt. Réessaie dans quelques jours, ou écris-nous à '+CONTACT+'.'
+           :'Online payment opens very soon. Try again in a few days, or email us at '+CONTACT+'.')
+      : (fr?'Paiement momentanément indisponible. ':'Checkout temporarily unavailable. ')+esc(e.message||''))+'</div>';
   });
 }
 /* Retour du paiement : ?paid=1 dans l'URL → on confirme auprès du serveur.

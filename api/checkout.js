@@ -43,6 +43,11 @@ module.exports = async (req, res) => {
     try {
       return res.status(200).json(await dodoCheckout({ plan, origin, email }, req));
     } catch (e) {
+      // Tant que Dodo n'a pas validé le compte vendeur, le mode réel refuse
+      // les paiements (403). L'app affiche alors un message clair.
+      if (e.code === 'MERCHANT_NOT_LIVE' || /live payments not enabled/i.test(e.message)) {
+        return res.status(503).json({ error: 'Paiements pas encore activés par Dodo', code: 'not_live' });
+      }
       return res.status(502).json({ error: e.message });
     }
   }
