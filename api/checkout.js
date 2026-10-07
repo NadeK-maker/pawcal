@@ -20,9 +20,9 @@ module.exports = async (req, res) => {
 
   const { plan, lang, origin, email } = req.body || {};
 
-  const price = (plan === 'mon'
+  const price = ((plan === 'mon'
     ? process.env.STRIPE_PRICE_MONTH
-    : process.env.STRIPE_PRICE_YEAR || '').trim();
+    : process.env.STRIPE_PRICE_YEAR) || '').trim();
 
   if (!price) {
     return res.status(500).json({
