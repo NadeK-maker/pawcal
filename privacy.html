@@ -15,12 +15,25 @@ p,li{color:#6C6475;font-size:15px}a{color:#D9481C}
 <body>
 <a class="back" href="/">← Retour à Scoopy</a>
 <h1>Politique de confidentialité</h1>
-<p class="top">Dernière mise à jour : 27 juillet 2026 · English summary at the bottom</p>
+<p class="top">Dernière mise à jour : 7 octobre 2026 · English summary at the bottom</p>
 
 <h2>1. Le principe : vos données restent chez vous</h2>
-<p>Scoopy fonctionne <b>sans compte obligatoire et sans base de données utilisateur</b>.
-Le profil de votre animal, votre journal de repas et votre historique de poids sont stockés
-<b>uniquement sur votre appareil</b> (stockage local du navigateur). Nous n'y avons pas accès.</p>
+<p>Scoopy fonctionne <b>sans compte obligatoire</b>. Sans compte, le profil de votre animal,
+votre journal de repas et votre historique de poids sont stockés <b>uniquement sur votre appareil</b>
+(stockage local du navigateur). Nous n'y avons pas accès.</p>
+
+<h2>1 bis. Le compte Google (facultatif)</h2>
+<p>Si vous choisissez « Continuer avec Google », la connexion est assurée par
+<b>Google Firebase Authentication</b>. Nous recevons alors votre nom, votre adresse email et votre
+photo de profil Google. Nous ne recevons jamais votre mot de passe.</p>
+<p>Vos animaux sont alors sauvegardés dans <b>Google Cloud Firestore</b>, dans un espace rattaché à
+votre compte et lisible par vous seul (règles de sécurité Firestore) : profil de chaque animal,
+pesées, repas du jour avec leur petite vignette, conversation avec l'assistant, et le nombre
+d'analyses gratuites utilisées. Cela sert uniquement à retrouver vos données sur vos autres appareils.
+Ces services sont soumis à la <a href="https://firebase.google.com/support/privacy" target="_blank" rel="noopener">politique de confidentialité de Firebase</a>.</p>
+<p>Vous pouvez vous déconnecter à tout moment (vos données restent alors sur l'appareil),
+ou supprimer votre compte depuis Réglages → « Supprimer mon compte » : votre compte et toutes
+les données enregistrées en ligne sont effacés immédiatement.</p>
 
 <h2>2. Les photos</h2>
 <p>Lorsque vous lancez une analyse, la photo est transmise à notre serveur qui la relaie à
@@ -44,13 +57,16 @@ Elles ne transitent jamais par nos serveurs.</p>
 <p>Nous n'utilisons ni cookies publicitaires ni traceurs tiers dans l'application.</p>
 
 <h2>6. Vos droits</h2>
-<p>Pour supprimer les données locales : Réglages → « Tout réinitialiser », ou effacez les données
-de site de votre navigateur. Pour toute demande concernant votre abonnement ou votre email
+<p>Pour supprimer les données locales : Réglages → « Tout effacer sur cet appareil », ou effacez les données
+de site de votre navigateur. Pour supprimer les données en ligne : Réglages → « Supprimer mon compte ». Pour toute demande concernant votre abonnement ou votre email
 (accès, rectification, suppression) : <a href="mailto:pawcalpr@gmail.com">pawcalpr@gmail.com</a>
 ou directement auprès du prestataire. Nous répondons sous 30 jours.</p>
 
 <h2>English summary</h2>
-<p>Scoopy stores your pet profile and logs <b>on your device only</b> — we run no user database.
+<p>Without an account, Scoopy stores your pet profile and logs <b>on your device only</b>.
+Signing in with Google is optional: it uses Google Firebase Authentication (we get your name, email and profile
+photo, never your password) and backs up your pets to Google Cloud Firestore, readable only by you, so you can find
+them on your other devices. You can sign out or delete your account and all online data at any time from Settings.
 Photos you submit are relayed to the Google Gemini API for analysis and are not retained on our
 servers. If you subscribe, your email is processed by our secure payment provider to manage
 your subscription. Card details go directly to the payment provider and never touch our servers. No ad trackers.
