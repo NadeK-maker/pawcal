@@ -675,15 +675,22 @@ function restore(){
 }
 
 /* ============ COMPTE GOOGLE (Firebase) ============
-   Coller ici le bloc firebaseConfig de la console Firebase. Ces valeurs sont
-   publiques : elles identifient le projet, ce ne sont pas des secrets (la
-   sécurité vient des règles Firestore, voir firestore.rules). Tant que c'est
-   vide, l'app marche sans compte et les boutons Google restent cachés.
+   Projet Firebase « scoopy-12cd2 ». Ces valeurs sont publiques : elles
+   identifient le projet, ce ne sont pas des secrets (la sécurité vient des
+   règles Firestore, voir firestore.rules). Mettre null pour couper les
+   comptes : l'app marche alors sans compte et les boutons Google sont cachés.
 
    Données en ligne : un document users/{uid} par compte, avec les animaux
    (profil, pesées, repas du jour, conversation), les compteurs gratuits et
    l'heure de la dernière modification. Premium n'y est jamais écrit par l'app. */
-var FIREBASE_CONFIG = null;
+var FIREBASE_CONFIG = {
+  apiKey: "AIzaSyCXB-FNPRjUrSC1nlbKhhIcOggbC922lWI",
+  authDomain: "scoopy-12cd2.firebaseapp.com",
+  projectId: "scoopy-12cd2",
+  storageBucket: "scoopy-12cd2.firebasestorage.app",
+  messagingSenderId: "998941989493",
+  appId: "1:998941989493:web:5b24acae906d6a372b763c"
+};
 var FB_SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
 
 var Cloud = (function(){
@@ -695,8 +702,9 @@ var Cloud = (function(){
     });
   }
   function on(){ return !!FIREBASE_CONFIG; }
-  /* Le SDK (≈ 200 Ko) ne se charge que si on en a besoin : connexion
-     demandée, ou compte déjà lié sur ce téléphone. */
+  /* Le SDK (≈ 150 Ko compressé) ne se charge que là où on peut en avoir
+     besoin : compte déjà lié sur ce téléphone, ou écran d'accueil / réglages
+     sans compte (préchargé en arrière-plan, voir warm). */
   function init(){
     if(!on()) return Promise.reject(new Error('off'));
     if(ready) return ready;
@@ -776,19 +784,31 @@ var Cloud = (function(){
     pulling=S.user?pull().catch(function(){}):Promise.resolve();
     return pulling;
   }
+  /* Les navigateurs mobiles (Safari surtout) bloquent une popup qui ne s'ouvre
+     pas directement au toucher : on charge donc le SDK avant, pendant que
+     l'écran est affiché, pour que signIn n'ait plus rien à attendre. */
+  function warm(){
+    if(!on()||ready||S.user) return;
+    var go=function(){ init().catch(function(){}); };
+    if(document.readyState==='complete') setTimeout(go,300); else window.addEventListener('load',function(){ setTimeout(go,300); });
+  }
+  function popup(){
+    var p=new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account'});
+    return auth.signInWithPopup(p);
+  }
   function signIn(){
     var fr=S.lang==='fr';
-    return init().then(function(){
-      var p=new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account'});
-      return auth.signInWithPopup(p).catch(function(e){
-        var c=e&&e.code||'';
-        if(/popup-blocked|operation-not-supported|web-storage-unsupported/.test(c)){
-          try{sessionStorage.setItem('scoopy_redirect','1');}catch(x){}
-          return auth.signInWithRedirect(p);
-        }
-        if(/popup-closed|cancelled-popup/.test(c)) return null;
-        throw e;
-      });
+    /* SDK prêt : popup ouverte tout de suite, dans le geste de l'utilisateur */
+    var start = auth ? popup() : init().then(popup);
+    return start.catch(function(e){
+      var c=e&&e.code||'';
+      if(/popup-blocked|operation-not-supported|web-storage-unsupported/.test(c)){
+        try{sessionStorage.setItem('scoopy_redirect','1');}catch(x){}
+        var p=new firebase.auth.GoogleAuthProvider(); p.setCustomParameters({prompt:'select_account'});
+        return auth.signInWithRedirect(p);
+      }
+      if(/popup-closed|cancelled-popup/.test(c)) return null;
+      throw e;
     }).then(function(r){
       /* on attend que le compte soit rapproché avant de choisir l'écran */
       return r ? new Promise(function(ok){ setTimeout(ok,0); }).then(function(){ return pulling; }) : null;
@@ -822,7 +842,7 @@ var Cloud = (function(){
     /* au retour sur l'app : on récupère ce qui a changé sur un autre appareil */
     if(S.user&&db&&!busy) pull().catch(function(){});
   }
-  return {on:on,init:init,dirty:dirty,flush:flush,push:push,pull:pull,signIn:signIn,signOut:signOut,deleteAccount:deleteAccount,resume:resume};
+  return {on:on,init:init,warm:warm,dirty:dirty,flush:flush,push:push,pull:pull,signIn:signIn,signOut:signOut,deleteAccount:deleteAccount,resume:resume};
 })();
 
 var SYNC='';
@@ -973,7 +993,7 @@ function show(id){
 function navSel(n){for(var i=1;i<=4;i++){var e=document.getElementById('n'+i); if(e)e.className='nb'+(n===i?' on':'');}}
 function showHome(){show('home');navSel(1);renderHome();}
 function showWeight(){show('wt');navSel(2);drawChart();}
-function showSet(){show('set');navSel(4);renderPet();renderAccount();}
+function showSet(){show('set');navSel(4);renderPet();renderAccount();Cloud.warm();}
 function showScan(){
   document.getElementById('result').innerHTML='';document.getElementById('scanErr').innerHTML='';
   show('scan');navSel(0);renderStrip();
@@ -2202,6 +2222,7 @@ window.addEventListener('focus',checkDay);
   /* compte déjà lié sur ce téléphone, ou retour d'une connexion par redirection */
   var redir=false; try{redir=sessionStorage.getItem('scoopy_redirect')==='1';sessionStorage.removeItem('scoopy_redirect');}catch(e){}
   if(Cloud.on()&&(S.syncedUid||redir)) Cloud.init().catch(function(){});
+  else if(!had) Cloud.warm();              // nouvel arrivant : bouton Google prêt sur l'accueil
   if(location.protocol!=='file:'){ loadPayCfg(); checkReturn(); }
   revalidate();
 })();
