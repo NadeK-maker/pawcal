@@ -3,282 +3,426 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Scoopy — Le compteur de calories de ton animal</title>
-<meta name="theme-color" content="#0E1116">
+<title>Scoopy — Le compteur de calories de ton chien et de ton chat</title>
+<meta name="description" content="Prends la gamelle en photo : Scoopy compte les calories, calcule la ration idéale de ton chien ou de ton chat et suit son poids.">
+<meta name="theme-color" content="#FFF8F2" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0F1115" media="(prefers-color-scheme: dark)">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Scoopy">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%23FFB020'/%3E%3Cstop offset='1' stop-color='%23FF6A3D'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cg fill='white'%3E%3Cellipse cx='32' cy='41' rx='12' ry='9.5'/%3E%3Ccircle cx='17' cy='27' r='5.5'/%3E%3Ccircle cx='27' cy='19.5' r='5.5'/%3E%3Ccircle cx='37' cy='19.5' r='5.5'/%3E%3Ccircle cx='47' cy='27' r='5.5'/%3E%3C/g%3E%3C/svg%3E">
-<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' fill='%23FF7A45'/%3E%3Cg fill='white'%3E%3Cellipse cx='32' cy='41' rx='12' ry='9.5'/%3E%3Ccircle cx='17' cy='27' r='5.5'/%3E%3Ccircle cx='27' cy='19.5' r='5.5'/%3E%3Ccircle cx='37' cy='19.5' r='5.5'/%3E%3Ccircle cx='47' cy='27' r='5.5'/%3E%3C/g%3E%3C/svg%3E">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-180.png">
+<meta property="og:title" content="Scoopy">
+<meta property="og:description" content="Le compteur de calories de ton chien et de ton chat. Une photo, c'est tout.">
+<meta property="og:image" content="icons/icon-512.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap">
 <style>
+/* ============ DESIGN SYSTEM ============
+   Clair par défaut, sombre si le téléphone est en mode sombre.
+   Toutes les couleurs passent par ces variables. */
 :root{
-  --bg:#0E1116; --surface:#171B22; --surface2:#1F242D; --line:#2A313C;
-  --text:#F2F4F7; --muted:#98A2B3; --faint:#667085;
-  --accent:#FF7A45; --accent2:#FFB020; --ok:#12B76A; --warn:#F79009; --bad:#F04438;
-  --r:18px;
+  --bg:#FFF8F2; --surface:#FFFFFF; --surface2:#FBF2EA; --line:#F1E3D7; --line2:#E7D4C4;
+  --text:#1E1A2B; --muted:#6C6475; --faint:#A0979F;
+  --accent:#FF6B3D; --accent2:#FFAE3B; --accentInk:#D9481C; --accentSoft:#FFEDE4; --onAccent:#FFFFFF;
+  --grad:linear-gradient(135deg,#FFA63D 0%,#FF6B3D 55%,#F2512A 100%);
+  --ok:#14A06A; --okBg:#E6F6EE; --okInk:#0B7A4F;
+  --warn:#E58A00; --warnBg:#FFF2D9; --warnInk:#94570A;
+  --bad:#E5484D; --badBg:#FDECEC; --badInk:#B42328;
+  --info:#2F6FEB; --infoBg:#EBF2FE; --infoInk:#1D4FB2;
+  --track:#F4E7DC; --navBg:rgba(255,255,255,.9);
+  --shadow:0 1px 2px rgba(30,26,43,.04),0 6px 20px rgba(30,26,43,.06);
+  --shadowAccent:0 10px 24px -8px rgba(255,107,61,.55);
+  --r:20px; --font:"Plus Jakarta Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  color-scheme:light;
 }
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0F1115; --surface:#181B21; --surface2:#20242C; --line:#2A2F38; --line2:#363C47;
+  --text:#F3F4F6; --muted:#A3A9B6; --faint:#6E7582;
+  --accentInk:#FF8A5E; --accentSoft:#2E1C15;
+  --okBg:#0D2A1E; --okInk:#5EDBA2; --warnBg:#2E2210; --warnInk:#F7C062;
+  --badBg:#33151A; --badInk:#FF9A9D; --infoBg:#13213A; --infoInk:#8DB5FF;
+  --track:#262B34; --navBg:rgba(20,23,28,.9);
+  --shadow:0 1px 2px rgba(0,0,0,.3),0 8px 24px rgba(0,0,0,.25);
+  color-scheme:dark;
+}}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;padding:0;background:var(--bg);color:var(--text);
-  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;
-  -webkit-font-smoothing:antialiased}
-body{display:flex;justify-content:center;min-height:100vh}
-#phone{width:100%;max-width:430px;min-height:100vh;background:var(--bg);position:relative;
-  display:flex;flex-direction:column;overflow:hidden}
-.scr{display:none;flex:1;flex-direction:column;padding:18px 18px 96px;animation:in .28s ease}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--font);
+  -webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+body{display:flex;justify-content:center;min-height:100vh;min-height:100dvh}
+#phone{width:100%;max-width:440px;min-height:100vh;min-height:100dvh;background:var(--bg);position:relative;
+  display:flex;flex-direction:column}
+@media (min-width:600px){
+  body{background:radial-gradient(80% 60% at 50% 0%,var(--accentSoft),var(--bg))}
+  #phone{box-shadow:0 0 0 1px var(--line),0 30px 80px rgba(30,26,43,.12)}
+}
+.scr{display:none;flex:1;flex-direction:column;padding:calc(14px + env(safe-area-inset-top)) 20px calc(104px + env(safe-area-inset-bottom));animation:in .3s cubic-bezier(.2,.8,.2,1)}
 .scr.on{display:flex}
-@keyframes in{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-h1{font-size:26px;line-height:1.15;margin:0 0 6px;letter-spacing:-.5px}
-h2{font-size:19px;margin:0 0 10px;letter-spacing:-.3px}
-p{color:var(--muted);font-size:14px;line-height:1.5;margin:0 0 14px}
-.small{font-size:12px;color:var(--faint)}
-.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px}
-.btn{display:block;width:100%;border:0;border-radius:14px;padding:16px;font-size:16px;font-weight:650;
-  background:linear-gradient(135deg,#FFB020,#FF6A3D);color:#160B04;cursor:pointer;font-family:inherit;
-  box-shadow:0 6px 18px #FF7A4533}
-.btn:active{transform:scale(.985)}
-.btn[disabled]{opacity:.45}
-.btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:550}
-.btn.sm{padding:11px;font-size:14px}
-.row{display:flex;gap:8px}
-.row>*{flex:1}
-input,select{width:100%;background:var(--surface2);border:1px solid var(--line);color:var(--text);
-  border-radius:12px;padding:13px;font-size:16px;font-family:inherit;margin-bottom:10px}
-label{display:block;font-size:12px;color:var(--muted);margin:0 0 5px;font-weight:600;letter-spacing:.2px}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
-.chip{background:var(--surface2);border:1px solid var(--line);border-radius:999px;padding:10px 14px;
-  font-size:14px;cursor:pointer;transition:.15s}
-.chip.sel{background:linear-gradient(135deg,#FFB020,#FF6A3D);color:#160B04;border-color:transparent;font-weight:650}
-.logo64{width:84px;height:84px;border-radius:22px;box-shadow:0 14px 40px #FF7A4548,0 2px 0 #ffffff14 inset}
-.wordmark{font-size:38px;font-weight:800;letter-spacing:-1.5px;margin:14px 0 4px}
-.wordmark i{font-style:normal;background:linear-gradient(135deg,#FFB020,#FF6A3D);
-  -webkit-background-clip:text;background-clip:text;color:transparent}
-.miniLogo{width:34px;height:34px;border-radius:9px;flex:0 0 34px}
-#s0{background:radial-gradient(120% 55% at 50% -5%,#2A1708 0%,transparent 60%),var(--bg)}
-.big2{display:flex;gap:10px;margin-bottom:14px}
-.big2 div{flex:1;background:var(--surface2);border:2px solid var(--line);border-radius:16px;
-  padding:20px 10px;text-align:center;cursor:pointer;font-size:15px;font-weight:600}
-.big2 div.sel{border-color:var(--accent);background:#2A1A12}
-.big2 span{display:block;font-size:34px;margin-bottom:4px}
-/* nav */
-#nav{position:absolute;bottom:0;left:0;right:0;height:76px;background:#11151Bee;
-  backdrop-filter:blur(12px);border-top:1px solid var(--line);display:none;
-  align-items:center;justify-content:space-around;padding-bottom:8px}
+.scr.bare{padding-bottom:calc(24px + env(safe-area-inset-bottom))}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+h1{font-size:28px;line-height:1.15;margin:0 0 8px;letter-spacing:-.6px;font-weight:800}
+h2{font-size:19px;margin:0 0 10px;letter-spacing:-.3px;font-weight:750}
+h3{font-size:15px;margin:0 0 4px;font-weight:700}
+p{color:var(--muted);font-size:15px;line-height:1.55;margin:0 0 16px}
+b{font-weight:700}
+.small{font-size:12.5px;color:var(--faint);line-height:1.5}
+a{color:var(--accentInk)}
+svg.i{width:22px;height:22px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* surfaces */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;margin-bottom:12px;box-shadow:var(--shadow)}
+.card.flat{box-shadow:none}
+/* boutons */
+.btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;border:0;border-radius:16px;
+  padding:16px;font-size:16px;font-weight:700;background:var(--grad);color:var(--onAccent);cursor:pointer;
+  font-family:inherit;box-shadow:var(--shadowAccent);text-decoration:none;transition:transform .12s,opacity .2s;letter-spacing:.1px}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.4;box-shadow:none}
+.btn.ghost{background:var(--surface);color:var(--text);border:1px solid var(--line2);box-shadow:none;font-weight:650}
+.btn.soft{background:var(--accentSoft);color:var(--accentInk);box-shadow:none}
+.btn.sm{padding:12px 14px;font-size:14.5px;border-radius:14px}
+.btn.danger{background:transparent;color:var(--badInk);border:1px solid var(--line2);box-shadow:none;font-weight:650}
+.btn + .btn{margin-top:10px}
+.iconbtn{width:40px;height:40px;border-radius:50%;border:1px solid var(--line);background:var(--surface);color:var(--text);
+  display:inline-flex;align-items:center;justify-content:center;cursor:pointer;padding:0;box-shadow:var(--shadow)}
+.iconbtn svg.i{width:20px;height:20px}
+/* formulaires */
+.row{display:flex;gap:10px}
+.row>*{flex:1;min-width:0}
+input,select,textarea{width:100%;background:var(--surface);border:1.5px solid var(--line2);color:var(--text);
+  border-radius:14px;padding:14px;font-size:16px;font-family:inherit;margin-bottom:12px;outline:none;transition:border-color .15s,box-shadow .15s}
+input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 4px var(--accentSoft)}
+input::placeholder,textarea::placeholder{color:var(--faint)}
+label{display:block;font-size:13px;color:var(--muted);margin:4px 0 7px;font-weight:650}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:var(--surface);border:1.5px solid var(--line2);border-radius:999px;padding:10px 15px;
+  font-size:14.5px;font-weight:600;cursor:pointer;transition:all .15s;color:var(--text);user-select:none}
+.chip.sel{background:var(--accentSoft);border-color:var(--accent);color:var(--accentInk)}
+.chip.add{border-style:dashed;color:var(--muted)}
+/* logo */
+.logo{display:block;border-radius:24%;box-shadow:0 14px 34px -10px rgba(242,81,42,.55)}
+.wordmark{font-size:40px;font-weight:800;letter-spacing:-1.6px;margin:18px 0 6px;line-height:1}
+.wordmark i{font-style:normal;background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+/* accueil */
+#s0{background:radial-gradient(120% 50% at 50% 0%,var(--accentSoft) 0%,transparent 70%),var(--bg)}
+.hero{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:20px 0}
+.hero p{max-width:300px}
+.perks{width:100%;margin:8px 0 6px;text-align:left}
+.perk{display:flex;gap:14px;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--line);
+  border-radius:16px;margin-bottom:8px;box-shadow:var(--shadow)}
+.perk .ic{width:40px;height:40px;border-radius:12px;background:var(--accentSoft);color:var(--accentInk);
+  display:flex;align-items:center;justify-content:center;flex:0 0 40px}
+.perk b{display:block;font-size:14.5px}
+.perk span{font-size:12.5px;color:var(--muted)}
+.legal{text-align:center;margin-top:12px}
+.legal a{color:var(--faint);text-decoration:none}
+/* onboarding */
+.steps{display:flex;gap:6px;flex:1;margin-right:12px}
+.steps i{flex:1;height:5px;border-radius:3px;background:var(--track)}
+.steps i.on{background:var(--grad)}
+.big2{display:flex;gap:12px;margin-bottom:18px}
+.big2 div{flex:1;background:var(--surface);border:2px solid var(--line);border-radius:22px;position:relative;
+  padding:22px 10px 18px;text-align:center;cursor:pointer;font-size:16px;font-weight:700;transition:all .15s;box-shadow:var(--shadow)}
+.big2 div.sel{border-color:var(--accent);background:var(--accentSoft);color:var(--accentInk)}
+.big2 div.sel:after{content:"✓";position:absolute;top:10px;right:12px;width:22px;height:22px;border-radius:50%;
+  background:var(--accent);color:#fff;font-size:13px;line-height:22px}
+.big2 span{display:block;font-size:46px;margin-bottom:6px;line-height:1.1}
+.result-num{font-size:60px;font-weight:800;letter-spacing:-2.5px;line-height:1;
+  background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
+.explain{text-align:left;margin-top:16px;padding-top:14px;border-top:1px dashed var(--line2)}
+/* barre du haut */
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:10px;min-height:40px}
+.top h2{margin:0}
+.hello{display:flex;align-items:center;gap:12px;min-width:0}
+.hello h2{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.avatar{width:44px;height:44px;border-radius:14px;background:var(--accentSoft);display:flex;align-items:center;
+  justify-content:center;font-size:24px;flex:0 0 44px}
+/* navigation */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:440px;
+  height:calc(74px + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);
+  background:var(--navBg);backdrop-filter:saturate(1.6) blur(16px);-webkit-backdrop-filter:saturate(1.6) blur(16px);
+  border-top:1px solid var(--line);display:none;align-items:center;justify-content:space-around;z-index:10}
 #nav.on{display:flex}
-.nb{background:none;border:0;color:var(--faint);font:inherit;font-size:10px;cursor:pointer;
-  display:flex;flex-direction:column;align-items:center;gap:3px;width:70px}
-.nb b{font-size:21px;font-weight:400;line-height:1}
-.nb.on{color:var(--accent)}
-.fab{width:60px;height:60px;border-radius:50%;background:var(--accent);color:#160B04;border:0;
-  font-size:27px;margin-top:-26px;box-shadow:0 8px 22px #FF7A4555;cursor:pointer}
-/* ring */
-.ringwrap{display:flex;flex-direction:column;align-items:center;padding:6px 0 2px}
-.ring{position:relative;width:210px;height:210px}
+.nb{background:none;border:0;color:var(--faint);font:inherit;font-size:11px;font-weight:650;cursor:pointer;
+  display:flex;flex-direction:column;align-items:center;gap:4px;width:72px;padding:6px 0}
+.nb.on{color:var(--accentInk)}
+.fab{width:62px;height:62px;border-radius:22px;background:var(--grad);color:#fff;border:0;
+  margin-top:-30px;box-shadow:var(--shadowAccent);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:transform .12s}
+.fab:active{transform:scale(.94)}
+.fab svg.i{width:28px;height:28px;stroke-width:2.4}
+/* anneau du jour */
+.ringwrap{display:flex;justify-content:center;padding:4px 0 6px}
+.ring{position:relative;width:220px;height:220px}
 .ring svg{transform:rotate(-90deg)}
+.ring .track{stroke:var(--track)}
 .ringtxt{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.ringtxt b{font-size:42px;letter-spacing:-1.5px;line-height:1}
-.ringtxt small{color:var(--muted);font-size:13px;margin-top:3px}
-.stats{display:flex;gap:8px;margin:14px 0 6px}
-.stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:center}
-.stat b{display:block;font-size:17px;margin-bottom:2px}
-.stat span{font-size:11px;color:var(--faint)}
-/* meals */
+.ringtxt b{font-size:46px;letter-spacing:-2px;line-height:1;font-weight:800}
+.ringtxt small{color:var(--muted);font-size:13px;margin-top:6px;font-weight:600}
+.ring.over .ringtxt b{color:var(--badInk)}
+.stats{display:flex;gap:10px;margin:14px 0 4px}
+.stat{flex:1;background:var(--surface);border:1px solid var(--line);border-radius:18px;padding:12px 8px;text-align:center;box-shadow:var(--shadow)}
+.stat b{display:block;font-size:18px;margin-bottom:2px;letter-spacing:-.3px}
+.stat span{font-size:11.5px;color:var(--muted);font-weight:600}
+.upsell{display:flex;gap:12px;align-items:center;cursor:pointer;background:var(--accentSoft);border-color:transparent;box-shadow:none}
+.upsell .ic{width:40px;height:40px;border-radius:12px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;flex:0 0 40px}
+.upsell b{display:block;font-size:15px;color:var(--accentInk)}
+.upsell .small{color:var(--muted)}
+.sechead{display:flex;justify-content:space-between;align-items:baseline;margin:20px 0 10px}
+.sechead h2{margin:0}
+/* repas */
 .meal{display:flex;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);
-  border-radius:14px;padding:11px;margin-bottom:8px}
-.meal img{width:48px;height:48px;border-radius:10px;object-fit:cover;background:var(--surface2)}
+  border-radius:18px;padding:10px 12px 10px 10px;margin-bottom:8px;box-shadow:var(--shadow)}
+.meal img,.meal .ph0{width:50px;height:50px;border-radius:14px;object-fit:cover;background:var(--surface2);flex:0 0 50px;
+  display:flex;align-items:center;justify-content:center;font-size:24px}
 .meal .m1{flex:1;min-width:0}
-.meal .m1 b{display:block;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meal .m1 span{font-size:12px;color:var(--faint)}
-.meal .kc{font-size:15px;font-weight:700;color:var(--accent2)}
-.del{background:none;border:0;color:var(--faint);font-size:18px;cursor:pointer;padding:0 2px}
+.meal .m1 b{display:block;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meal .m1 span{font-size:12.5px;color:var(--muted)}
+.meal .kc{font-size:16px;font-weight:800;color:var(--accentInk);white-space:nowrap}
+.meal .kc small{font-size:11px;font-weight:600;color:var(--faint);margin-left:2px}
+.del{background:none;border:0;color:var(--faint);cursor:pointer;padding:6px;border-radius:10px;display:flex}
+.del svg.i{width:18px;height:18px}
+.empty{text-align:center;padding:26px 18px;border:1.5px dashed var(--line2);border-radius:var(--r);background:transparent}
+.empty .e{font-size:34px;margin-bottom:6px}
+.empty p{margin:0 0 14px}
 /* scan */
-#drop{border:2px dashed var(--line);border-radius:var(--r);padding:34px 16px;text-align:center;
-  background:var(--surface);margin-bottom:12px;cursor:pointer}
-#drop.mini{padding:14px 16px}
-#drop.mini div:first-child{font-size:22px;display:inline-block;margin-right:8px}
+#drop{border:2px dashed var(--line2);border-radius:var(--r);padding:30px 16px;text-align:center;
+  background:var(--surface);margin-bottom:12px;cursor:pointer;transition:border-color .15s}
+#drop:active{border-color:var(--accent)}
+#drop .cam{width:62px;height:62px;border-radius:20px;background:var(--accentSoft);color:var(--accentInk);
+  display:inline-flex;align-items:center;justify-content:center;margin-bottom:10px}
+#drop .cam svg.i{width:30px;height:30px}
+#drop b{display:block;font-size:16px}
+#drop.mini{padding:12px 16px;display:flex;align-items:center;justify-content:center;gap:10px;text-align:left}
+#drop.mini .cam{width:40px;height:40px;border-radius:12px;margin:0}
+#drop.mini .cam svg.i{width:20px;height:20px}
+#drop.mini #dropTxt{display:flex;align-items:center;gap:10px}
 #drop.mini .small{display:none}
 #strip{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin-bottom:12px}
 #strip:empty{display:none}
-.ph{position:relative;flex:0 0 84px;height:84px;border-radius:12px;overflow:hidden;border:1px solid var(--line)}
+.ph{position:relative;flex:0 0 86px;height:86px;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
 .ph img{width:100%;height:100%;object-fit:cover;display:block}
-.ph button{position:absolute;top:3px;right:3px;width:22px;height:22px;border-radius:50%;border:0;
-  background:#000000cc;color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:0}
-.ph i{position:absolute;bottom:0;left:0;right:0;background:#000000aa;color:#fff;font-size:10px;
+.ph button{position:absolute;top:4px;right:4px;width:24px;height:24px;border-radius:50%;border:0;
+  background:rgba(0,0,0,.6);color:#fff;font-size:13px;line-height:1;cursor:pointer;padding:0}
+.ph i{position:absolute;bottom:0;left:0;right:0;background:rgba(0,0,0,.5);color:#fff;font-size:10px;
   font-style:normal;text-align:center;padding:2px 0}
-/* macros */
+.seg{display:flex;background:var(--surface2);border-radius:16px;padding:4px;margin-bottom:14px;gap:4px}
+.seg .chip{flex:1;text-align:center;border:0;background:transparent;padding:10px 6px;font-size:13.5px;border-radius:12px;color:var(--muted)}
+.seg .chip.sel{background:var(--surface);color:var(--text);box-shadow:var(--shadow)}
+/* résultats */
+.bignum{font-size:44px;font-weight:800;color:var(--accentInk);letter-spacing:-1.8px;line-height:1.1}
 .macro{margin:10px 0 2px}
-.macro .ml{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:4px}
-.macro .mb{height:7px;border-radius:4px;background:var(--surface2);overflow:hidden;display:flex}
+.macro .ml{display:flex;justify-content:space-between;font-size:12px;color:var(--muted);margin-bottom:6px}
+.macro .mb{height:8px;border-radius:4px;background:var(--surface2);overflow:hidden;display:flex}
 .macro .mb u{display:block;height:100%;text-decoration:none}
-.kv{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;border-top:1px solid var(--line)}
-.kv b{white-space:nowrap;margin-left:10px}
-.msgs{flex:1;overflow-y:auto;padding:4px 0 8px;display:flex;flex-direction:column;gap:10px}
-.msg{max-width:86%;padding:12px 14px;border-radius:16px;font-size:14.5px;line-height:1.5;white-space:pre-wrap}
-.msg.me{align-self:flex-end;background:linear-gradient(135deg,#FFB020,#FF6A3D);color:#160B04;
-  border-bottom-right-radius:5px;font-weight:500}
-.msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);
-  border-bottom-left-radius:5px;color:var(--text)}
-.msg.sys{align-self:center;background:#12212E;border:1px solid #1D3A50;color:#84CAFF;
-  font-size:12.5px;text-align:center;max-width:100%}
-.sugg{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:10px}
-.sugg button{background:var(--surface2);border:1px solid var(--line);color:var(--muted);
-  border-radius:999px;padding:8px 12px;font-size:12.5px;cursor:pointer;font-family:inherit}
-.askbar{display:flex;gap:8px;align-items:flex-end;padding-top:8px;border-top:1px solid var(--line)}
-.askbar textarea{flex:1;background:var(--surface2);border:1px solid var(--line);color:var(--text);
-  border-radius:14px;padding:12px;font-size:15px;font-family:inherit;resize:none;height:46px;max-height:110px}
-.askbar button{flex:0 0 46px;height:46px;border-radius:14px;border:0;font-size:19px;cursor:pointer;
-  background:linear-gradient(135deg,#FFB020,#FF6A3D);color:#160B04}
-.askbar button:disabled{opacity:.45}
-.sect{font-size:11px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);
-  font-weight:700;margin:14px 0 4px}
-.spin{width:20px;height:20px;border:2.5px solid #ffffff40;border-top-color:#160B04;border-radius:50%;
-  display:inline-block;vertical-align:-4px;margin-right:8px;animation:sp .7s linear infinite}
+.kv{display:flex;justify-content:space-between;font-size:14px;padding:9px 0;border-top:1px solid var(--line);gap:10px}
+.kv b{white-space:nowrap}
+.sect{font-size:11.5px;letter-spacing:.7px;text-transform:uppercase;color:var(--faint);font-weight:750;margin:18px 0 6px}
+.feat{display:flex;gap:12px;align-items:flex-start;margin-bottom:11px;font-size:14.5px;line-height:1.45}
+.feat b{color:var(--ok);font-size:15px;flex:0 0 auto}
+.badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;font-weight:650;padding:5px 10px;border-radius:999px;
+  background:var(--surface2);color:var(--muted);margin:0 6px 6px 0;line-height:1.35}
+.badge.ok{background:var(--okBg);color:var(--okInk)}
+.badge.warn{background:var(--warnBg);color:var(--warnInk)}
+.badge.bad{background:var(--badBg);color:var(--badInk)}
+.bcsbar{display:flex;gap:4px;margin:12px 0}
+.bcsbar i{flex:1;height:9px;border-radius:4px;background:var(--track);font-style:normal}
+.bcsbar i.a{background:var(--grad)}
+.err{background:var(--badBg);color:var(--badInk);padding:12px 14px;border-radius:14px;font-size:13.5px;margin-bottom:12px;line-height:1.45}
+.hint{background:var(--infoBg);color:var(--infoInk);padding:12px 14px;border-radius:14px;font-size:13px;line-height:1.55;margin-bottom:12px}
+.spin{width:18px;height:18px;border:2.5px solid rgba(255,255,255,.35);border-top-color:#fff;border-radius:50%;
+  display:inline-block;animation:sp .7s linear infinite}
+.msg .spin,.ghost .spin{border-color:var(--line2);border-top-color:var(--accent)}
 @keyframes sp{to{transform:rotate(360deg)}}
-.badge{display:inline-block;font-size:11px;padding:4px 9px;border-radius:999px;background:var(--surface2);
-  color:var(--muted);margin:0 6px 6px 0}
-.badge.ok{background:#0B2E1F;color:#6CE9A6}
-.badge.warn{background:#3A2408;color:#FDB022}
-.badge.bad{background:#3B1211;color:#FDA29B}
-/* bcs */
-.bcsbar{display:flex;gap:3px;margin:10px 0}
-.bcsbar i{flex:1;height:8px;border-radius:3px;background:var(--surface2);font-style:normal}
-.bcsbar i.a{background:var(--accent)}
-/* paywall */
-#pw .plan{border:2px solid var(--line);border-radius:16px;padding:14px;margin-bottom:10px;cursor:pointer;position:relative}
-#pw .plan.sel{border-color:var(--accent);background:#20140E}
+/* assistant */
+#vet{padding-bottom:calc(88px + env(safe-area-inset-bottom));height:100vh;height:100dvh}
+.msgs{flex:1;overflow-y:auto;padding:4px 0 10px;display:flex;flex-direction:column;gap:10px;min-height:0}
+.msg{max-width:86%;padding:12px 15px;border-radius:20px;font-size:15px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
+.msg.me{align-self:flex-end;background:var(--grad);color:#fff;border-bottom-right-radius:6px;font-weight:500}
+.msg.bot{align-self:flex-start;background:var(--surface);border:1px solid var(--line);border-bottom-left-radius:6px;box-shadow:var(--shadow)}
+.msg.sys{align-self:stretch;max-width:100%;background:var(--infoBg);color:var(--infoInk);font-size:13px;text-align:center;border-radius:16px}
+.sugg{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.sugg button{background:var(--surface);border:1.5px solid var(--line2);color:var(--text);
+  border-radius:999px;padding:9px 13px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;text-align:left}
+.askbar{display:flex;gap:8px;align-items:flex-end;padding-top:10px}
+.askbar textarea{flex:1;border-radius:22px;padding:13px 16px;font-size:15px;resize:none;height:50px;max-height:120px;margin:0}
+.askbar button{flex:0 0 50px;height:50px;border-radius:50%;border:0;cursor:pointer;background:var(--grad);color:#fff;
+  display:flex;align-items:center;justify-content:center;box-shadow:var(--shadowAccent)}
+.askbar button:disabled{opacity:.4;box-shadow:none}
+/* premium */
+#pw{background:radial-gradient(110% 40% at 50% 0%,var(--accentSoft) 0%,transparent 70%),var(--bg)}
+.crown{width:76px;height:76px;border-radius:24px;background:var(--grad);color:#fff;display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;box-shadow:var(--shadowAccent)}
+.crown svg.i{width:38px;height:38px}
+#pw .plan{border:2px solid var(--line2);border-radius:18px;padding:15px 16px;margin-bottom:10px;cursor:pointer;position:relative;background:var(--surface)}
+#pw .plan.sel{border-color:var(--accent);background:var(--accentSoft)}
 #pw .plan b{font-size:16px}
-#pw .plan .pr{float:right;font-weight:700}
-#pw .tag{position:absolute;top:-9px;right:12px;background:var(--accent);color:#160B04;font-size:10px;
-  font-weight:800;padding:3px 8px;border-radius:999px}
-.feat{display:flex;gap:10px;align-items:flex-start;margin-bottom:9px;font-size:14px}
-.feat b{color:var(--ok);font-size:15px}
-/* misc */
-.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.lang{background:var(--surface2);border:1px solid var(--line);color:var(--muted);border-radius:999px;
-  padding:6px 11px;font-size:12px;cursor:pointer;font-family:inherit}
-.err{background:#3B1211;border:1px solid #7A2622;color:#FDA29B;padding:11px;border-radius:12px;
-  font-size:13px;margin-bottom:10px}
-.hint{background:#12212E;border:1px solid #1D3A50;color:#84CAFF;padding:11px;border-radius:12px;
-  font-size:12.5px;line-height:1.5;margin-bottom:12px}
-a{color:var(--accent2)}
+#pw .plan .pr{float:right;font-weight:800}
+#pw .tag{position:absolute;top:-10px;right:14px;background:var(--grad);color:#fff;font-size:11px;font-weight:800;padding:3px 9px;border-radius:999px}
+/* réglages */
+.list{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);overflow:hidden;margin-bottom:12px;box-shadow:var(--shadow)}
+.list .li{display:flex;align-items:center;gap:12px;padding:14px 16px;border-top:1px solid var(--line);font-size:15px;font-weight:600;
+  cursor:pointer;background:none;border-left:0;border-right:0;border-bottom:0;width:100%;color:var(--text);font-family:inherit;text-align:left}
+.list .li:first-child{border-top:0}
+.list .li .ic{width:34px;height:34px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;color:var(--muted);flex:0 0 34px}
+.list .li .ic svg.i{width:18px;height:18px}
+.list .li span.grow{flex:1}
+.list .li .chev{color:var(--faint)}
+.lbl{font-size:12px;letter-spacing:.6px;text-transform:uppercase;color:var(--faint);font-weight:750;margin:18px 4px 8px}
+.lbl:first-of-type{margin-top:4px}
+/* graphe poids */
+.chart text{fill:var(--faint);font-size:11px;font-family:var(--font)}
+.chart .grid{stroke:var(--line)}
+/* accessibilité clavier */
+.chip:focus-visible,.btn:focus-visible,.iconbtn:focus-visible,.nb:focus-visible,.fab:focus-visible,.big2 div:focus-visible,.li:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
 <body>
+<!-- ========== ICÔNES (une seule définition, réutilisée partout) ========== -->
+<svg aria-hidden="true" style="position:absolute;width:0;height:0;overflow:hidden">
+  <defs>
+    <linearGradient id="lgLogo" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB547"/><stop offset="1" stop-color="#F2512A"/></linearGradient>
+    <linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFA63D"/><stop offset="1" stop-color="#F2512A"/></linearGradient>
+  </defs>
+  <symbol id="logo" viewBox="0 0 64 64">
+    <rect width="64" height="64" rx="16" fill="url(#lgLogo)"/>
+    <g fill="#fff"><ellipse cx="32" cy="32.5" rx="8.6" ry="6.6"/><circle cx="20.5" cy="24.5" r="3.7"/><circle cx="26.6" cy="18.8" r="3.9"/>
+      <circle cx="37.4" cy="18.8" r="3.9"/><circle cx="43.5" cy="24.5" r="3.7"/>
+      <rect x="11" y="36" width="42" height="5.2" rx="2.6"/><path d="M14 41.2h36c-1.3 7.4-8.2 11.8-18 11.8s-16.7-4.4-18-11.8z"/></g>
+    <path d="M15.2 45h33.6" stroke="#F2512A" stroke-opacity=".28" stroke-width="2"/>
+  </symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/></symbol>
+  <symbol id="i-chat" viewBox="0 0 24 24"><path d="M21 11.5a8.4 8.4 0 0 1-12.3 7.5L3 21l2-5.3A8.4 8.4 0 1 1 21 11.5z"/><path d="M8.5 11.5h.01M12 11.5h.01M15.5 11.5h.01"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="5"/><path d="M7.5 10a6 6 0 0 1 9 0"/><path d="m12 12.5 1.6-3"/></symbol>
+  <symbol id="i-set" viewBox="0 0 24 24"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2.2"/><circle cx="9" cy="17" r="2.2"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+  <symbol id="i-cam" viewBox="0 0 24 24"><path d="M4 8h3l2-3h6l2 3h3a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V9a1 1 0 0 1 1-1z"/><circle cx="12" cy="13.5" r="3.6"/></symbol>
+  <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></symbol>
+  <symbol id="i-back" viewBox="0 0 24 24"><path d="m15 18-6-6 6-6"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 24 24"><path d="m9 18 6-6-6-6"/></symbol>
+  <symbol id="i-trash" viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></symbol>
+  <symbol id="i-spark" viewBox="0 0 24 24"><path d="M12 3l1.9 4.6L18.5 9.5l-4.6 1.9L12 16l-1.9-4.6L5.5 9.5l4.6-1.9z"/><path d="M19 15l.8 2.2L22 18l-2.2.8L19 21l-.8-2.2L16 18l2.2-.8z"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8z"/><path d="M14 3v5h5M9 13h6M9 17h6"/></symbol>
+  <symbol id="i-target" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1"/></symbol>
+  <symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/></symbol>
+  <symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></symbol>
+  <symbol id="i-key" viewBox="0 0 24 24"><circle cx="8" cy="15" r="4"/><path d="m10.8 12.2 8.2-8.2M17 6l2 2M14.5 8.5l2 2"/></symbol>
+  <symbol id="i-sync" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 15.5-6.3L21 8M21 3v5h-5M21 12a9 9 0 0 1-15.5 6.3L3 16M3 21v-5h5"/></symbol>
+  <symbol id="i-card" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/></symbol>
+  <symbol id="i-edit" viewBox="0 0 24 24"><path d="M4 20h4L19 9l-4-4L4 16z"/><path d="m13.5 6.5 4 4"/></symbol>
+  <symbol id="i-share" viewBox="0 0 24 24"><path d="M4 12v7a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-7M16 6l-4-4-4 4M12 2v13"/></symbol>
+  <symbol id="i-bowl" viewBox="0 0 24 24"><path d="M3 11h18a9 9 0 0 1-18 0z"/><path d="M7.5 7c1-1 2-1 3 0s2 1 3 0 2-1 3 0"/></symbol>
+</svg>
 <div id="phone">
 
-<!-- ========== 0. LANGUE / SPLASH ========== -->
-<div class="scr on" id="s0">
-  <div style="flex:1;display:flex;flex-direction:column;justify-content:center;text-align:center;align-items:center">
-    <svg class="logo64" viewBox="0 0 64 64">
-      <defs><linearGradient id="pg1" x1="0" y1="0" x2="1" y2="1">
-        <stop offset="0" stop-color="#FFB020"/><stop offset="1" stop-color="#FF6A3D"/></linearGradient></defs>
-      <rect width="64" height="64" rx="16" fill="url(#pg1)"/>
-      <g fill="#fff"><ellipse cx="32" cy="41" rx="12" ry="9.5"/><circle cx="17" cy="27" r="5.5"/>
-      <circle cx="27" cy="19.5" r="5.5"/><circle cx="37" cy="19.5" r="5.5"/><circle cx="47" cy="27" r="5.5"/></g>
-    </svg>
+<!-- ========== 0. BIENVENUE ========== -->
+<div class="scr on bare" id="s0">
+  <div class="hero">
+    <svg class="logo" width="92" height="92"><use href="#logo"/></svg>
     <div class="wordmark">Scoo<i>py</i></div>
-    <p style="text-align:center" id="t_tag">Le compteur de calories de ton chien et ton chat.<br>Une photo. C'est tout.</p>
+    <p id="t_tag">Le compteur de calories de ton chien et de ton chat.</p>
+    <div class="perks">
+      <div class="perk"><div class="ic"><svg class="i"><use href="#i-cam"/></svg></div>
+        <div><b id="t_p1">Une photo de la gamelle</b><span id="t_p1s">Scoopy reconnaît la nourriture et compte les calories.</span></div></div>
+      <div class="perk"><div class="ic"><svg class="i"><use href="#i-target"/></svg></div>
+        <div><b id="t_p2">Sa ration idéale</b><span id="t_p2s">Calculée avec les formules vétérinaires (NRC / WSAVA).</span></div></div>
+      <div class="perk"><div class="ic"><svg class="i"><use href="#i-chat"/></svg></div>
+        <div><b id="t_p3">Un assistant toujours là</b><span id="t_p3s">Nutrition, poids, comportement : pose tes questions.</span></div></div>
+    </div>
   </div>
-  <div class="row" style="margin-bottom:10px">
-    <button class="btn" onclick="setLang('fr');go('s1')">🇫🇷 Français</button>
-    <button class="btn ghost" onclick="setLang('en');go('s1')">🇬🇧 English</button>
-  </div>
-  <p class="small" style="text-align:center" id="t_disc">Prototype — ne remplace pas un vétérinaire.</p>
-  <p class="small" style="text-align:center;margin-top:6px">
-    <a href="terms.html" style="color:var(--faint)" id="t_lterms">Conditions</a> ·
-    <a href="privacy.html" style="color:var(--faint)" id="t_lpriv">Confidentialité</a> ·
-    <a href="refunds.html" style="color:var(--faint)" id="t_lref">Remboursements</a></p>
+  <button class="btn" onclick="go('s1')" id="t_go">Commencer</button>
+  <p class="small" style="text-align:center;margin:14px 0 0" id="t_disc">Ne remplace pas l'avis d'un vétérinaire.</p>
+  <p class="small legal">
+    <a href="terms.html" id="t_lterms">Conditions</a> ·
+    <a href="privacy.html" id="t_lpriv">Confidentialité</a> ·
+    <a href="refunds.html" id="t_lref">Remboursements</a></p>
 </div>
 
 <!-- ========== 1. ESPÈCE ========== -->
-<div class="scr" id="s1">
-  <div class="top"><span class="small" id="t_step1">Étape 1 / 4</span>
-    <button class="lang" id="b_cancelAdd" style="display:none" onclick="cancelAdd()">✕</button></div>
+<div class="scr bare" id="s1">
+  <div class="top">
+    <button class="iconbtn" id="b_back1" onclick="go('s0')" aria-label="Retour"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="steps"><i class="on"></i><i></i><i></i></div>
+    <button class="iconbtn" id="b_cancelAdd" style="display:none" onclick="cancelAdd()" aria-label="Annuler"><svg class="i"><use href="#i-x"/></svg></button>
+  </div>
   <h1 id="t_q1">Qui allons-nous suivre ?</h1>
   <p id="t_q1s">La science nutritionnelle est différente pour le chien et pour le chat.</p>
   <div class="big2">
-    <div id="sp_dog" onclick="pick('species','dog')"><span>🐕</span><i id="t_dog" style="font-style:normal">Chien</i></div>
-    <div id="sp_cat" onclick="pick('species','cat')"><span>🐈</span><i id="t_cat" style="font-style:normal">Chat</i></div>
+    <div id="sp_dog" role="button" tabindex="0" onclick="pick('species','dog')"><span>🐕</span><i id="t_dog" style="font-style:normal">Chien</i></div>
+    <div id="sp_cat" role="button" tabindex="0" onclick="pick('species','cat')"><span>🐈</span><i id="t_cat" style="font-style:normal">Chat</i></div>
   </div>
-  <label id="t_name">Son prénom</label>
-  <input id="i_name" placeholder="Rex">
+  <label for="i_name" id="t_name">Son prénom</label>
+  <input id="i_name" placeholder="Rex" autocomplete="off" maxlength="30">
   <div style="flex:1"></div>
-  <button class="btn" onclick="go('s2')" id="t_next1">Continuer</button>
+  <button class="btn" onclick="next1()" id="t_next1">Continuer</button>
 </div>
 
 <!-- ========== 2. PROFIL ========== -->
-<div class="scr" id="s2">
-  <div class="top"><span class="small" id="t_step2">Étape 2 / 4</span></div>
+<div class="scr bare" id="s2">
+  <div class="top">
+    <button class="iconbtn" onclick="go('s1')" aria-label="Retour"><svg class="i"><use href="#i-back"/></svg></button>
+    <div class="steps"><i class="on"></i><i class="on"></i><i></i></div>
+  </div>
   <h1 id="t_q2">Son profil</h1>
   <div class="row">
-    <div><label id="t_w">Poids actuel (kg)</label><input id="i_w" type="number" step="0.1" placeholder="12.5" inputmode="decimal"></div>
-    <div><label id="t_age">Âge (ans)</label><input id="i_age" type="number" step="0.5" placeholder="4" inputmode="decimal"></div>
+    <div><label for="i_w" id="t_w">Poids actuel (kg)</label><input id="i_w" type="text" inputmode="decimal" placeholder="12,5" autocomplete="off"></div>
+    <div><label for="i_age" id="t_age">Âge (ans)</label><input id="i_age" type="text" inputmode="decimal" placeholder="4" autocomplete="off"></div>
   </div>
   <label id="t_ster">Stérilisé / castré ?</label>
   <div class="chips" id="c_ster">
-    <div class="chip" onclick="pick('ster','y',this)" id="t_yes">Oui</div>
-    <div class="chip" onclick="pick('ster','n',this)" id="t_no">Non</div>
+    <div class="chip" role="button" tabindex="0" onclick="pick('ster','y',this)" id="t_yes">Oui</div>
+    <div class="chip" role="button" tabindex="0" onclick="pick('ster','n',this)" id="t_no">Non</div>
   </div>
   <label id="t_act">Niveau d'activité</label>
   <div class="chips" id="c_act">
-    <div class="chip" onclick="pick('act','low',this)" id="t_a1">Pantouflard</div>
-    <div class="chip" onclick="pick('act','norm',this)" id="t_a2">Normal</div>
-    <div class="chip" onclick="pick('act','high',this)" id="t_a3">Très actif</div>
+    <div class="chip" role="button" tabindex="0" onclick="pick('act','low',this)" id="t_a1">Pantouflard</div>
+    <div class="chip sel" role="button" tabindex="0" onclick="pick('act','norm',this)" id="t_a2">Normal</div>
+    <div class="chip" role="button" tabindex="0" onclick="pick('act','high',this)" id="t_a3">Très actif</div>
   </div>
   <label id="t_goal">Objectif</label>
   <div class="chips" id="c_goal">
-    <div class="chip" onclick="pick('goal','loss',this)" id="t_g1">Perdre du poids</div>
-    <div class="chip" onclick="pick('goal','keep',this)" id="t_g2">Maintenir</div>
-    <div class="chip" onclick="pick('goal','gain',this)" id="t_g3">Prendre du poids</div>
+    <div class="chip" role="button" tabindex="0" onclick="pick('goal','loss',this)" id="t_g1">Perdre du poids</div>
+    <div class="chip sel" role="button" tabindex="0" onclick="pick('goal','keep',this)" id="t_g2">Maintenir</div>
+    <div class="chip" role="button" tabindex="0" onclick="pick('goal','gain',this)" id="t_g3">Prendre du poids</div>
   </div>
   <div style="flex:1"></div>
   <button class="btn" onclick="finishOnb()" id="t_next2">Calculer ses besoins</button>
 </div>
 
-<!-- ========== 3. RÉSULTAT ONBOARDING ========== -->
-<div class="scr" id="s3">
+<!-- ========== 3. RÉSULTAT ========== -->
+<div class="scr bare" id="s3">
+  <div class="top"><div class="steps"><i class="on"></i><i class="on"></i><i class="on"></i></div></div>
   <div style="flex:1;display:flex;flex-direction:column;justify-content:center">
-    <div style="text-align:center;font-size:56px">🎯</div>
+    <div class="avatar" id="o_av" style="margin:0 auto 14px;width:64px;height:64px;font-size:34px;border-radius:20px">🐕</div>
     <h1 style="text-align:center" id="t_res">Voici son objectif</h1>
-    <div class="card" style="text-align:center;padding:26px">
-      <div style="font-size:52px;font-weight:800;letter-spacing:-2px;color:var(--accent)" id="o_kcal">—</div>
-      <div class="small" id="t_perday">kcal par jour</div>
-      <hr style="border:0;border-top:1px solid var(--line);margin:16px 0">
-      <div class="small" style="text-align:left;line-height:1.7" id="o_expl"></div>
+    <div class="card" style="text-align:center;padding:26px 20px">
+      <div class="result-num" id="o_kcal">—</div>
+      <div class="small" id="t_perday" style="margin-top:6px">kcal par jour</div>
+      <div class="small explain" id="o_expl"></div>
     </div>
-    <div class="hint" id="t_meth">Calcul basé sur les formules vétérinaires standards : <b>BER = 70 × poids<sup>0,75</sup></b>, puis facteur d'entretien selon l'espèce, la stérilisation, l'activité et l'objectif (NRC / WSAVA).</div>
+    <div class="hint" id="t_meth">Calcul basé sur les formules vétérinaires standards.</div>
   </div>
   <button class="btn" onclick="openApp()" id="t_start">C'est parti</button>
 </div>
 
-<!-- ========== HOME ========== -->
+<!-- ========== JOURNAL ========== -->
 <div class="scr" id="home">
   <div class="top">
-    <div style="display:flex;align-items:center;gap:10px">
-      <svg class="miniLogo" viewBox="0 0 64 64">
-        <defs><linearGradient id="pg2" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#FFB020"/><stop offset="1" stop-color="#FF6A3D"/></linearGradient></defs>
-        <rect width="64" height="64" rx="16" fill="url(#pg2)"/>
-        <g fill="#fff"><ellipse cx="32" cy="41" rx="12" ry="9.5"/><circle cx="17" cy="27" r="5.5"/>
-        <circle cx="27" cy="19.5" r="5.5"/><circle cx="37" cy="19.5" r="5.5"/><circle cx="47" cy="27" r="5.5"/></g>
-      </svg>
-      <div><h2 style="margin:0" id="h_hello">Salut 👋</h2><span class="small" id="h_date"></span></div>
-    </div>
-    <div style="display:flex;gap:8px;align-items:center">
-      <button class="lang" onclick="toggleLang()" id="h_lang">EN</button>
-      <button class="lang" onclick="show('set')">⚙︎</button>
-    </div>
+    <div class="hello"><div class="avatar" id="h_av">🐕</div>
+      <div style="min-width:0"><h2 id="h_hello"></h2><div class="small" id="h_date"></div></div></div>
   </div>
-  <div class="chips" id="petBar" style="margin:4px 0 0"></div>
+  <div class="chips" id="petBar"></div>
   <div class="ringwrap">
-    <div class="ring">
-      <svg width="210" height="210">
-        <circle cx="105" cy="105" r="88" stroke="#242A34" stroke-width="16" fill="none"/>
-        <circle id="arc" cx="105" cy="105" r="88" stroke="url(#g)" stroke-width="16" fill="none"
-          stroke-linecap="round" stroke-dasharray="553" stroke-dashoffset="553"
-          style="transition:stroke-dashoffset .7s cubic-bezier(.4,0,.2,1)"/>
-        <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#FFB020"/><stop offset="1" stop-color="#FF7A45"/></linearGradient></defs>
+    <div class="ring" id="ring">
+      <svg width="220" height="220" viewBox="0 0 220 220">
+        <circle class="track" cx="110" cy="110" r="92" stroke-width="18" fill="none"/>
+        <circle id="arc" cx="110" cy="110" r="92" stroke="url(#rg)" stroke-width="18" fill="none"
+          stroke-linecap="round" stroke-dasharray="578" stroke-dashoffset="578"
+          style="transition:stroke-dashoffset .8s cubic-bezier(.2,.8,.2,1)"/>
       </svg>
       <div class="ringtxt"><b id="r_left">0</b><small id="t_left">kcal restantes</small></div>
     </div>
@@ -288,93 +432,98 @@ a{color:var(--accent2)}
     <div class="stat"><b id="st_tgt">0</b><span id="t_target">Objectif</span></div>
     <div class="stat"><b id="st_w">—</b><span id="t_weight">Poids</span></div>
   </div>
-  <div id="upsell" class="card" style="display:none;cursor:pointer;background:linear-gradient(135deg,#2A1708,#20140E);border-color:#4A2B12" onclick="showPw()">
-    <b style="font-size:15px">⭐ <span id="t_up1">Passe en illimité</span></b>
-    <div class="small" id="t_up2" style="margin-top:3px">Scans illimités, plusieurs animaux — 3,33 €/mois</div>
+  <div id="upsell" class="card upsell" style="display:none" role="button" tabindex="0" onclick="showPw('upsell')">
+    <div class="ic"><svg class="i"><use href="#i-spark"/></svg></div>
+    <div style="flex:1"><b id="t_up1">Passe à Premium</b><div class="small" id="t_up2">Scans illimités, plusieurs animaux, rapport véto.</div></div>
+    <svg class="i" style="color:var(--accentInk)"><use href="#i-chev"/></svg>
   </div>
-  <h2 style="margin:16px 0 8px" id="t_today">Aujourd'hui</h2>
+  <div class="sechead"><h2 id="t_today">Aujourd'hui</h2><span class="small" id="h_count"></span></div>
   <div id="meals"></div>
-  <p class="small" id="t_empty">Aucun repas enregistré. Appuie sur ＋ pour scanner la gamelle.</p>
+  <div class="empty" id="emptyBox">
+    <div class="e">🥣</div>
+    <p id="t_empty">Aucun repas pour l'instant. Prends la gamelle en photo ou ajoute un repas à la main.</p>
+    <button class="btn soft sm" onclick="showScan()" id="t_emptyBtn">Ajouter un repas</button>
+  </div>
 </div>
 
 <!-- ========== SCAN ========== -->
 <div class="scr" id="scan">
-  <div class="top"><h2 style="margin:0" id="t_scanT">Scanner</h2>
-    <button class="lang" onclick="showHome()">✕</button></div>
-  <div class="chips" id="c_mode">
-    <div class="chip sel" onclick="pick('mode','bowl',this)" id="t_m1">🍲 La gamelle</div>
-    <div class="chip" onclick="pick('mode','label',this)" id="t_m2">🏷️ L'étiquette</div>
-    <div class="chip" onclick="pick('mode','bcs',this)" id="t_m3">📏 Sa silhouette</div>
+  <div class="top"><h2 id="t_scanT">Ajouter un repas</h2>
+    <button class="iconbtn" onclick="showHome()" aria-label="Fermer"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div class="seg" id="c_mode">
+    <div class="chip sel" role="button" tabindex="0" onclick="pick('mode','bowl',this)" id="t_m1">Gamelle</div>
+    <div class="chip" role="button" tabindex="0" onclick="pick('mode','label',this)" id="t_m2">Étiquette</div>
+    <div class="chip" role="button" tabindex="0" onclick="pick('mode','bcs',this)" id="t_m3">Silhouette</div>
   </div>
   <p id="t_modeHelp">Prends la gamelle en photo de dessus. L'IA identifie la nourriture et estime les calories.</p>
-  <div id="drop" onclick="document.getElementById('file').click()">
-    <div id="dropTxt"><div style="font-size:40px">📷</div><b id="t_take">Prendre une photo</b>
-      <div class="small" id="t_or">ou choisir dans la galerie</div></div>
+  <div id="drop" role="button" tabindex="0" onclick="document.getElementById('file').click()">
+    <div id="dropTxt"><div class="cam"><svg class="i"><use href="#i-cam"/></svg></div>
+      <div><b id="t_take">Prendre une photo</b><div class="small" id="t_or">ou choisir dans la galerie</div></div></div>
   </div>
   <div id="strip"></div>
-  <input type="file" id="file" accept="image/*" capture="environment" multiple style="display:none" onchange="loadImg(event)">
+  <input type="file" id="file" accept="image/*" multiple style="display:none" onchange="loadImg(event)">
   <div id="freeLeft"></div>
   <div id="scanErr"></div>
-  <div id="result"></div>
-  <div class="card">
-    <label id="t_manT" style="margin-bottom:8px">Ajout rapide sans photo</label>
-    <div class="row">
-      <input id="i_mName" placeholder="Friandise" style="margin:0">
-      <input id="i_mKcal" type="number" placeholder="kcal" inputmode="numeric" style="margin:0;flex:0 0 92px">
-    </div>
-    <button class="btn ghost sm" style="margin-top:8px" onclick="addManualMeal()" id="t_manAdd">Ajouter au journal</button>
-  </div>
-  <div style="flex:1"></div>
   <button class="btn" id="analyzeBtn" onclick="analyze()" disabled>Analyser</button>
+  <div id="result" style="margin-top:14px"></div>
+  <div class="card flat" style="margin-top:6px">
+    <h3 id="t_manT">Ajout rapide sans photo</h3>
+    <p class="small" id="t_manS" style="margin:0 0 10px">Une friandise, un reste de repas : indique les calories.</p>
+    <div class="row">
+      <input id="i_mName" placeholder="Friandise" maxlength="60" style="margin:0">
+      <input id="i_mKcal" type="text" inputmode="numeric" placeholder="kcal" style="margin:0;flex:0 0 96px">
+    </div>
+    <button class="btn ghost sm" style="margin-top:10px" onclick="addManualMeal()" id="t_manAdd">Ajouter au journal</button>
+  </div>
 </div>
 
 <!-- ========== POIDS ========== -->
 <div class="scr" id="wt">
-  <div class="top"><h2 style="margin:0" id="t_wT">Suivi du poids</h2>
-    <button class="lang" onclick="showHome()">✕</button></div>
-  <div class="card"><div id="chart"></div></div>
+  <div class="top"><h2 id="t_wT">Suivi du poids</h2></div>
+  <div class="card"><div id="chart" class="chart"></div></div>
+  <label for="i_newW" id="t_newW">Nouvelle pesée (kg)</label>
   <div class="row" style="margin-bottom:12px">
-    <input id="i_newW" type="number" step="0.1" placeholder="kg" inputmode="decimal" style="margin:0">
-    <button class="btn sm" style="flex:0 0 110px" onclick="addWeight()" id="t_addW">Ajouter</button>
+    <input id="i_newW" type="text" inputmode="decimal" placeholder="12,5" style="margin:0" autocomplete="off">
+    <button class="btn sm" style="flex:0 0 112px" onclick="addWeight()" id="t_addW">Ajouter</button>
   </div>
   <div class="card">
-    <h2 id="t_proj">Projection</h2>
-    <p id="o_proj" style="margin:0"></p>
+    <h3 id="t_proj">Conseil</h3>
+    <p id="o_proj" style="margin:0;font-size:14px"></p>
   </div>
-  <button class="btn ghost sm" onclick="vetReport()" id="t_vetRep">📄 Rapport pour le vétérinaire (PDF)</button>
+  <button class="btn ghost sm" onclick="vetReport()"><svg class="i"><use href="#i-doc"/></svg><span id="t_vetRep">Rapport pour le vétérinaire (PDF)</span></button>
 </div>
 
 <!-- ========== ASSISTANT ========== -->
 <div class="scr" id="vet">
   <div class="top">
-    <div><h2 style="margin:0" id="t_vetT">Assistant Scoopy</h2>
-      <span class="small" id="t_vetSub">Spécialisé chiens et chats</span></div>
-    <button class="lang" onclick="showHome()">✕</button>
+    <div class="hello"><div class="avatar"><svg class="i" style="color:var(--accentInk)"><use href="#i-chat"/></svg></div>
+      <div><h2 style="margin:0" id="t_vetT">Assistant Scoopy</h2><div class="small" id="t_vetSub">Spécialisé chiens et chats</div></div></div>
   </div>
   <div id="chatLeft"></div>
   <div class="msgs" id="msgs"></div>
   <div class="sugg" id="sugg"></div>
   <div id="askErr"></div>
   <div class="askbar">
-    <textarea id="i_ask" rows="1" placeholder="Pose ta question..."
+    <textarea id="i_ask" rows="1" placeholder="Pose ta question..." maxlength="1000"
       oninput="growAsk(this)" onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();ask();}"></textarea>
-    <button id="askBtn" onclick="ask()">↑</button>
+    <button id="askBtn" onclick="ask()" aria-label="Envoyer"><svg class="i"><use href="#i-up"/></svg></button>
   </div>
 </div>
 
-<!-- ========== PAYWALL ========== -->
-<div class="scr" id="pw">
-  <div class="top"><span></span><button class="lang" onclick="closePw()">✕</button></div>
-  <div style="text-align:center"><div style="font-size:50px">⭐️</div>
+<!-- ========== PREMIUM ========== -->
+<div class="scr bare" id="pw">
+  <div class="top"><span></span><button class="iconbtn" onclick="closePw()" aria-label="Fermer"><svg class="i"><use href="#i-x"/></svg></button></div>
+  <div style="text-align:center">
+    <div class="crown"><svg class="i"><use href="#i-spark"/></svg></div>
     <h1 id="t_pwT">Scoopy Premium</h1>
-    <p id="t_pwS">Tes 3 scans gratuits sont utilisés.</p></div>
+    <p id="pwWhy"></p></div>
   <div class="card">
     <div class="feat"><b>✓</b><span id="t_f1">Scans illimités de gamelles et d'étiquettes</span></div>
     <div class="feat"><b>✓</b><span id="t_f2">Analyse de silhouette (score corporel) illimitée</span></div>
     <div class="feat"><b>✓</b><span id="t_f3">Plusieurs animaux sur un seul compte</span></div>
     <div class="feat"><b>✓</b><span id="t_f4">Rapport PDF à donner au vétérinaire</span></div>
     <div class="feat"><b>✓</b><span id="t_f5">Alertes ingrédients toxiques</span></div>
-    <div class="feat"><b>✓</b><span id="t_f6">Assistant IA illimité, spécialisé chiens et chats</span></div>
+    <div class="feat" style="margin:0"><b>✓</b><span id="t_f6">Assistant IA illimité, spécialisé chiens et chats</span></div>
   </div>
   <div class="plan sel" id="p_year" onclick="pickPlan('year')">
     <span class="tag" id="t_save">-58%</span>
@@ -387,70 +536,69 @@ a{color:var(--accent2)}
   </div>
   <div id="pwErr"></div>
   <div id="payOff" style="display:none">
-    <div class="card" style="border-color:#3A2A12;background:#1C1710">
-      <h2 style="margin:0 0 6px" id="t_offT">Paiement indisponible</h2>
-      <p class="small" style="margin:0" id="t_offB"></p>
+    <div class="hint">
+      <b id="t_offT">Paiement bientôt disponible</b><br><span id="t_offB"></span>
     </div>
-    <a class="btn" id="mailBtn" href="#" style="display:block;text-align:center;text-decoration:none;line-height:52px"><span id="t_offC">Nous écrire</span></a>
-    <button class="btn ghost sm" style="margin-top:8px" onclick="askCode()" id="t_offCode">J'ai un code d'accès</button>
-    <div id="codeMsg"></div>
+    <a class="btn" id="mailBtn" href="#"><svg class="i"><use href="#i-mail"/></svg><span id="t_offC">Nous écrire</span></a>
+    <button class="btn ghost sm" style="margin-top:10px" onclick="askCode()"><svg class="i"><use href="#i-key"/></svg><span id="t_offCode">J'ai un code d'accès</span></button>
+    <div id="codeMsg" style="margin-top:10px"></div>
   </div>
   <div id="payOn">
     <button class="btn" onclick="fakeBuy()" id="t_cta">Continuer</button>
-    <button class="btn ghost sm" style="margin-top:8px" onclick="restorePurchase()" id="t_already">J'ai déjà un abonnement</button>
-    <p class="small" style="text-align:center;margin-top:10px" id="t_cancel">Annulable à tout moment. Paiement sécurisé — reçu et facture par email.</p>
+    <button class="btn ghost sm" style="margin-top:10px" onclick="restorePurchase()" id="t_already">J'ai déjà un abonnement</button>
+    <p class="small" style="text-align:center;margin-top:12px" id="t_cancel">Annulable à tout moment. Paiement sécurisé — reçu et facture par email.</p>
   </div>
 </div>
 
-<!-- ========== RÉGLAGES / CLÉ API ========== -->
+<!-- ========== RÉGLAGES ========== -->
 <div class="scr" id="set">
-  <div class="top"><h2 style="margin:0" id="t_setT">Réglages</h2>
-    <button class="lang" onclick="showHome()">✕</button></div>
+  <div class="top"><h2 id="t_setT">Réglages</h2></div>
   <div id="keyBlock" style="display:none">
-  <div class="hint" id="t_keyHelp">
-    Pour que l'IA fonctionne, colle ta clé Google Gemini (gratuite) :
-    <a href="https://aistudio.google.com/apikey" target="_blank">aistudio.google.com/apikey</a>.
-    Elle reste dans cet onglet et n'est envoyée qu'à Google. En production, la clé vit sur ton serveur, jamais dans l'app.
+    <div class="hint" id="t_keyHelp">Colle ta clé Google Gemini.</div>
+    <label for="i_key">Google AI Studio API key</label>
+    <input id="i_key" placeholder="AIza..." autocomplete="off">
+    <button class="btn sm" onclick="saveKey()" id="t_saveKey">Enregistrer</button>
+    <div id="keyOk"></div>
   </div>
-  <label>Google AI Studio API key</label>
-  <input id="i_key" placeholder="AIza..." autocomplete="off">
-  <button class="btn sm" onclick="saveKey()" id="t_saveKey">Enregistrer</button>
-  <div id="keyOk"></div>
+  <div class="lbl" id="t_petT">Animal</div>
+  <div class="card">
+    <div class="hello"><div class="avatar" id="o_petAv">🐕</div><div class="small" id="o_pet" style="color:var(--muted)"></div></div>
   </div>
-  <div class="card" style="margin-top:16px">
-    <h2 id="t_petT">L'animal</h2>
-    <div class="small" id="o_pet"></div>
-    <button class="btn ghost sm" style="margin-top:10px;display:none" onclick="delPet()" id="b_delPet">Supprimer cet animal</button>
+  <div class="list">
+    <button class="li" onclick="editPet()"><span class="ic"><svg class="i"><use href="#i-edit"/></svg></span><span class="grow" id="t_editPet">Modifier son profil</span><svg class="i chev"><use href="#i-chev"/></svg></button>
+    <button class="li" onclick="addPet()"><span class="ic"><svg class="i"><use href="#i-plus"/></svg></span><span class="grow" id="t_addPet2">Ajouter un animal</span><svg class="i chev"><use href="#i-chev"/></svg></button>
+    <button class="li" onclick="delPet()" id="b_delPet" style="display:none;color:var(--badInk)"><span class="ic"><svg class="i"><use href="#i-trash"/></svg></span><span class="grow" id="t_delPet">Supprimer cet animal</span></button>
   </div>
-  <div class="card" style="margin-top:16px">
-    <h2 id="t_accT">Compte</h2>
-    <p class="small" id="t_accHelp" style="margin-bottom:8px">Ton email sert de compte : il retrouve ton abonnement sur n'importe quel appareil.</p>
-    <input id="i_email" type="email" placeholder="ton@email.com" autocomplete="email" style="margin-bottom:8px">
+  <div class="lbl" id="t_accT">Compte</div>
+  <div class="card">
+    <p class="small" id="t_accHelp" style="margin:0 0 10px">Ton email sert de compte : il retrouve ton abonnement sur n'importe quel appareil.</p>
+    <input id="i_email" type="email" placeholder="ton@email.com" autocomplete="email" style="margin-bottom:10px">
     <button class="btn ghost sm" onclick="saveEmail()" id="t_accSave">Enregistrer mon email</button>
-    <div id="accOk"></div>
+    <div id="accOk" style="margin-top:10px"></div>
   </div>
-  <div class="card" style="margin-top:16px">
-    <h2 id="t_subT">Abonnement</h2>
-    <div class="small" id="o_sub" style="margin-bottom:10px"></div>
-    <button class="btn sm" style="margin-bottom:8px" onclick="showPw()" id="goPremium">⭐ Passer Premium — scans illimités</button>
-    <button class="btn ghost sm" style="margin-bottom:8px" onclick="openPortal()" id="t_portal">Gérer mon abonnement et mes factures</button>
-    <button class="btn ghost sm" onclick="restorePurchase()" id="t_restore">Restaurer mon abonnement</button>
+  <div class="lbl" id="t_subT">Abonnement</div>
+  <div class="card"><div class="small" id="o_sub"></div>
+    <button class="btn sm" style="margin-top:12px" onclick="showPw('upsell')" id="goPremium">Passer à Premium</button></div>
+  <div class="list">
+    <button class="li" onclick="openPortal()" id="b_portal"><span class="ic"><svg class="i"><use href="#i-card"/></svg></span><span class="grow" id="t_portal">Gérer mon abonnement et mes factures</span><svg class="i chev"><use href="#i-chev"/></svg></button>
+    <button class="li" onclick="restorePurchase()"><span class="ic"><svg class="i"><use href="#i-sync"/></svg></span><span class="grow" id="t_restore">Restaurer mon abonnement</span><svg class="i chev"><use href="#i-chev"/></svg></button>
+    <a class="li" href="mailto:pawcalpr@gmail.com" style="text-decoration:none"><span class="ic"><svg class="i"><use href="#i-mail"/></svg></span><span class="grow" id="t_contact">Nous contacter</span><svg class="i chev"><use href="#i-chev"/></svg></a>
   </div>
-  <button class="btn ghost sm" onclick="resetAll()" id="t_reset">Tout réinitialiser</button>
-  <p class="small" style="text-align:center;margin-top:10px">
-    <a href="terms.html" style="color:var(--faint)">Conditions</a> ·
-    <a href="privacy.html" style="color:var(--faint)">Confidentialité</a> ·
-    <a href="refunds.html" style="color:var(--faint)">Remboursements</a> ·
-    <a href="mailto:pawcalpr@gmail.com" style="color:var(--faint)">Contact</a></p>
+  <button class="btn danger sm" onclick="resetAll()" id="t_reset">Tout effacer sur cet appareil</button>
+  <p class="small legal">
+    <a href="terms.html" id="t_lterms2">Conditions</a> ·
+    <a href="privacy.html" id="t_lpriv2">Confidentialité</a> ·
+    <a href="refunds.html" id="t_lref2">Remboursements</a></p>
 </div>
 
-<!-- ========== NAV ========== -->
-<div id="nav">
-  <button class="nb on" id="n1" onclick="showHome()"><b>◎</b><span id="t_n1">Journal</span></button>
-  <button class="nb" id="n3" onclick="showVet()"><b>✚</b><span id="t_n3">Assistant</span></button>
-  <button class="fab" onclick="showScan()">＋</button>
-  <button class="nb" id="n2" onclick="show('wt');navSel(2)"><b>◈</b><span id="t_n2">Poids</span></button>
-</div>
+<!-- ========== NAVIGATION ========== -->
+<nav id="nav">
+  <button class="nb on" id="n1" onclick="showHome()"><svg class="i"><use href="#i-home"/></svg><span id="t_n1">Journal</span></button>
+  <button class="nb" id="n3" onclick="showVet()"><svg class="i"><use href="#i-chat"/></svg><span id="t_n3">Assistant</span></button>
+  <button class="fab" onclick="showScan()" aria-label="Ajouter un repas"><svg class="i"><use href="#i-plus"/></svg></button>
+  <button class="nb" id="n2" onclick="showWeight()"><svg class="i"><use href="#i-scale"/></svg><span id="t_n2">Poids</span></button>
+  <button class="nb" id="n4" onclick="showSet()"><svg class="i"><use href="#i-set"/></svg><span id="t_n4">Réglages</span></button>
+</nav>
 
 </div>
 <script>
@@ -486,8 +634,8 @@ var Store = (function(){
    L'animal affiché vit directement dans S (S.name, S.meals...). S.pets garde
    une copie de chaque animal ; on échange les champs quand on change d'animal. */
 var PET_KEYS=['species','name','w','age','ster','act','goal','idealW','target','meals','weights','msgs'];
-function petSnap(){var o={};for(var i=0;i<PET_KEYS.length;i++)o[PET_KEYS[i]]=S[PET_KEYS[i]];o.day=today();return o;}
-function syncPet(){ if(!S.species||S.adding)return; S.pets[S.cur]=petSnap(); }
+function petSnap(){var o={};for(var i=0;i<PET_KEYS.length;i++)o[PET_KEYS[i]]=S[PET_KEYS[i]];o.msgs=(S.msgs||[]).slice(-30);o.day=today();return o;}
+function syncPet(){ if(!S.species||S.adding||S.editing)return; S.pets[S.cur]=petSnap(); }
 function loadPet(i){
   var p=S.pets[i]; if(!p)return;
   for(var k=0;k<PET_KEYS.length;k++){var key=PET_KEYS[k]; if(p[key]!==undefined)S[key]=p[key];}
@@ -506,6 +654,7 @@ function restore(){
   for(var k in o){ if(k!=='day') S[k]=o[k]; }
   if(o.day!==today()) S.meals=[];          // le journal repart à zéro chaque jour
   S.adding=false;
+  (S.pets||[]).concat([{meals:S.meals}]).forEach(function(p){(p.meals||[]).forEach(function(m){if(m.img&&m.img.length>40000)m.img=null;});});
   if(!S.pets||!S.pets.length){S.pets=[];S.cur=0;syncPet();}   // ancien format : un seul animal
   else loadPet(S.cur<S.pets.length?S.cur:0);
   S.imgs=[]; return true;
@@ -513,8 +662,14 @@ function restore(){
 
 /* ============ TRADUCTIONS ============ */
 var T = {
- t_tag:["Le compteur de calories de ton chien et ton chat.<br>Une photo. C'est tout.","The calorie counter for your dog and cat.<br>One photo. That's it."],
- t_disc:["Prototype — ne remplace pas un vétérinaire.","Prototype — not a substitute for a vet."],
+ t_tag:["Le compteur de calories de ton chien et de ton chat.","The calorie counter for your dog and cat."],
+ t_p1:["Une photo de la gamelle","One photo of the bowl"], t_p1s:["Scoopy reconnaît la nourriture et compte les calories.","Scoopy recognises the food and counts the calories."],
+ t_p2:["Sa ration idéale","Their ideal portion"], t_p2s:["Calculée avec les formules vétérinaires (NRC / WSAVA).","Calculated with veterinary formulas (NRC / WSAVA)."],
+ t_p3:["Un assistant toujours là","An assistant, any time"], t_p3s:["Nutrition, poids, comportement : pose tes questions.","Nutrition, weight, behaviour: ask anything."],
+ t_go:["Commencer","Get started"],
+ t_disc:["Ne remplace pas l'avis d'un vétérinaire.","Not a substitute for a vet's advice."],
+ t_lterms:["Conditions","Terms"], t_lpriv:["Confidentialité","Privacy"], t_lref:["Remboursements","Refunds"],
+ t_lterms2:["Conditions","Terms"], t_lpriv2:["Confidentialité","Privacy"], t_lref2:["Remboursements","Refunds"],
  t_step1:["Étape 1 / 3","Step 1 / 3"], t_step2:["Étape 2 / 3","Step 2 / 3"],
  t_q1:["Qui allons-nous suivre ?","Who are we tracking?"],
  t_q1s:["La science nutritionnelle est différente pour le chien et pour le chat.","Nutrition science is different for dogs and cats."],
@@ -529,11 +684,15 @@ var T = {
  t_meth:["Calcul basé sur les formules vétérinaires standards : <b>BER = 70 × poids<sup>0,75</sup></b>, puis facteur d'entretien selon l'espèce, la stérilisation, l'activité et l'objectif (NRC / WSAVA).","Based on standard veterinary formulas: <b>RER = 70 × weight<sup>0.75</sup></b>, then a maintenance factor for species, neutering, activity and goal (NRC / WSAVA)."],
  t_start:["C'est parti","Let's go"],
  t_left:["kcal restantes","kcal left"], t_eaten:["Consommé","Eaten"], t_target:["Objectif","Target"], t_weight:["Poids","Weight"],
- t_today:["Aujourd'hui","Today"], t_empty:["Aucun repas enregistré. Appuie sur ＋ pour scanner la gamelle.","No meals yet. Tap ＋ to scan the bowl."],
- t_scanT:["Scanner","Scan"], t_m1:["🍲 La gamelle","🍲 The bowl"], t_m2:["🏷️ L'étiquette","🏷️ The label"], t_m3:["📏 Sa silhouette","📏 Body shape"],
+ t_today:["Aujourd'hui","Today"],
+ t_empty:["Aucun repas pour l'instant. Prends la gamelle en photo ou ajoute un repas à la main.","No meals yet. Snap the bowl or add a meal by hand."],
+ t_emptyBtn:["Ajouter un repas","Add a meal"],
+ t_scanT:["Ajouter un repas","Add a meal"], t_m1:["Gamelle","Bowl"], t_m2:["Étiquette","Label"], t_m3:["Silhouette","Body shape"],
+ analyzeBtn:["Analyser","Analyze"], t_manS:["Une friandise, un reste de repas : indique les calories.","A treat, some leftovers: enter the calories."],
  t_take:["Prendre une photo","Take a photo"], t_or:["ou choisir dans la galerie","or pick from your gallery"],
- t_wT:["Suivi du poids","Weight tracking"], t_addW:["Ajouter","Add"], t_proj:["Projection","Projection"],
- t_pwT:["Scoopy Premium","Scoopy Premium"], t_pwS:["Tes 3 scans gratuits sont utilisés.","You've used your 3 free scans."],
+ t_wT:["Suivi du poids","Weight tracking"], t_addW:["Ajouter","Add"], t_proj:["Conseil","Advice"],
+ t_newW:["Nouvelle pesée (kg)","New weigh-in (kg)"],
+ t_pwT:["Scoopy Premium","Scoopy Premium"],
  t_f1:["Scans illimités de gamelles et d'étiquettes","Unlimited bowl and label scans"],
  t_f2:["Analyse de silhouette (score corporel) illimitée","Unlimited body-condition analysis"],
  t_f3:["Plusieurs animaux sur un seul compte","Multiple pets on one account"],
@@ -543,7 +702,7 @@ var T = {
  t_pyr:["12 mois","12 months"], t_pyr2:["3,33 € / mois — 7 jours d'essai gratuit","€3.33 / month — 7-day free trial"],
  t_pmo:["1 mois","1 month"], t_pmo2:["Sans engagement","Cancel anytime"],
  t_cta:["Continuer","Continue"],
- t_offT:["Paiement indisponible","Payments unavailable"],
+ t_offT:["Paiement bientôt disponible","Payments coming soon"],
  t_offB:["Nous ne pouvons pas encaisser de paiement pour le moment. Écris-nous et nous t'ouvrons l'accès complet gratuitement en attendant.","We can't take payments right now. Email us and we'll open full access for you, free, in the meantime."],
  t_offC:["Nous écrire","Email us"],
  t_offCode:["J'ai un code d'accès","I have an access code"],
@@ -561,21 +720,23 @@ var T = {
  t_chatOut:["Questions gratuites épuisées","Free questions used up"],
  t_chatUnl:["Premium — questions illimitées","Premium — unlimited questions"],
  t_vetHello:["Je suis spécialisé chiens et chats : nutrition, poids, comportement, prévention. Je ne remplace pas un vétérinaire et je ne pose jamais de diagnostic.","I specialise in dogs and cats: nutrition, weight, behaviour, prevention. I am not a vet and never give a diagnosis."],
- t_accT:["Compte","Account"],
+ t_accT:["Compte","Account"], t_n4:["Réglages","Settings"],
+ t_editPet:["Modifier son profil","Edit their profile"], t_addPet2:["Ajouter un animal","Add a pet"], t_delPet:["Supprimer cet animal","Delete this pet"],
+ t_contact:["Nous contacter","Contact us"],
  t_accHelp:["Ton email sert de compte : il retrouve ton abonnement sur n'importe quel appareil.","Your email is your account: it restores your subscription on any device."],
  t_accSave:["Enregistrer mon email","Save my email"],
  t_subT:["Abonnement","Subscription"],
  t_portal:["Gérer mon abonnement et mes factures","Manage subscription and invoices"],
  t_restore:["Restaurer mon abonnement","Restore my subscription"],
  t_already:["J'ai déjà un abonnement","I already have a subscription"],
- goPremium:["⭐ Passer Premium — scans illimités","⭐ Go Premium — unlimited scans"],
- t_up1:["Passe en illimité","Go unlimited"],
- t_up2:["Scans illimités, plusieurs animaux — 3,33 €/mois","Unlimited scans, multiple pets — €3.33/month"],
- t_addPet:["Ajouter","Add"], b_delPet:["Supprimer cet animal","Delete this pet"],
- t_vetRep:["📄 Rapport pour le vétérinaire (PDF)","📄 Report for your vet (PDF)"],
- t_setT:["Réglages","Settings"], t_saveKey:["Enregistrer","Save"], t_petT:["L'animal","The pet"],
+ goPremium:["Passer à Premium","Go Premium"],
+ t_up1:["Passe à Premium","Go Premium"],
+ t_up2:["Scans illimités, plusieurs animaux, rapport véto.","Unlimited scans, several pets, vet report."],
+ t_addPet:["Ajouter","Add"],
+ t_vetRep:["Rapport pour le vétérinaire (PDF)","Report for your vet (PDF)"],
+ t_setT:["Réglages","Settings"], t_saveKey:["Enregistrer","Save"], t_petT:["Animal","Pet"],
  t_manT:["Ajout rapide sans photo","Quick add without photo"], t_manAdd:["Ajouter au journal","Add to log"],
- t_reset:["Tout réinitialiser","Reset everything"], t_n1:["Journal","Log"], t_n2:["Poids","Weight"],
+ t_reset:["Tout effacer sur cet appareil","Erase everything on this device"], t_n1:["Journal","Log"], t_n2:["Poids","Weight"],
  t_keyHelp:["<b>Version en ligne (Vercel)</b> : rien à faire, la clé est déjà sur le serveur.<br><b>Fichier ouvert directement</b> : colle ta clé Google Gemini (gratuite) : <a href='https://aistudio.google.com/apikey' target='_blank'>aistudio.google.com/apikey</a>. Elle reste dans cet onglet et n'est envoyée qu'à Google.","<b>Online version (Vercel)</b>: nothing to do, the key already lives on the server.<br><b>File opened directly</b>: paste your free Google Gemini key: <a href='https://aistudio.google.com/apikey' target='_blank'>aistudio.google.com/apikey</a>. It stays in this tab and only goes to Google."]
 };
 var MODEHELP = {
@@ -584,39 +745,58 @@ var MODEHELP = {
  bcs:["Photo de profil, debout, en entier. L'IA estime le score corporel de 1 à 9.","Full-body side photo, standing. The AI estimates body condition score from 1 to 9."]
 };
 function L(){return S.lang==='fr'?0:1}
+/* La langue suit celle du téléphone : français si le français fait partie
+   des langues préférées, anglais sinon. Plus de bouton à choisir. */
+function detectLang(){
+  var l=[].concat(navigator.languages||[],navigator.language||[]);
+  for(var i=0;i<l.length;i++){ if(/^fr/i.test(l[i]))return 'fr'; }
+  return 'en';
+}
 function applyLang(){
   for(var k in T){var e=document.getElementById(k); if(e) e.innerHTML=T[k][L()];}
   var mh=document.getElementById('t_modeHelp'); if(mh) mh.textContent=MODEHELP[S.mode][L()];
   var mn=document.getElementById('i_mName'); if(mn) mn.placeholder=S.lang==='fr'?'Friandise':'Treat';
-  document.getElementById('h_lang').textContent = S.lang==='fr'?'EN':'FR';
+  var em=document.getElementById('i_email'); if(em) em.placeholder=S.lang==='fr'?'ton@email.com':'you@email.com';
+  ['i_w','i_newW'].forEach(function(id){var x=document.getElementById(id); if(x)x.placeholder=S.lang==='fr'?'12,5':'12.5';});
   document.documentElement.lang=S.lang;
-  if(S.name) document.getElementById('h_hello').textContent=(S.lang==='fr'?'Salut ':'Hey ')+S.name+' '+(S.species==='cat'?'🐈':'🐕');
+  document.getElementById('h_hello').textContent=S.name||'';
+  ['h_av','o_av','o_petAv'].forEach(function(id){var a=document.getElementById(id); if(a)a.textContent=petEmoji(S.species);});
   renderHome(); renderPet();
 }
-function setLang(l){S.lang=l;applyLang();renderPayState();save();}
-function toggleLang(){setLang(S.lang==='fr'?'en':'fr');}
 
 /* ============ NAVIGATION ============ */
 function go(id){show(id);}
 function show(id){
   var a=document.querySelectorAll('.scr'); for(var i=0;i<a.length;i++)a[i].classList.remove('on');
   document.getElementById(id).classList.add('on'); S.screen=id;
-  var inApp=['home','scan','wt','set','pw','vet'].indexOf(id)>=0;
-  document.getElementById('nav').className=inApp&&id!=='pw'?'on':'';
+  var inApp=['home','scan','wt','set','vet'].indexOf(id)>=0;
+  document.getElementById('nav').className=inApp?'on':'';
   window.scrollTo(0,0);
 }
-function navSel(n){document.getElementById('n1').className='nb'+(n===1?' on':'');
-  document.getElementById('n2').className='nb'+(n===2?' on':'');
-  var e3=document.getElementById('n3'); if(e3)e3.className='nb'+(n===3?' on':'');}
+function navSel(n){for(var i=1;i<=4;i++){var e=document.getElementById('n'+i); if(e)e.className='nb'+(n===i?' on':'');}}
 function showHome(){show('home');navSel(1);renderHome();}
+function showWeight(){show('wt');navSel(2);drawChart();}
+function showSet(){show('set');navSel(4);renderPet();}
 function showScan(){
-  if(!S.premium && S.scans>=FREE_SCANS){showPw();return;}
   document.getElementById('result').innerHTML='';document.getElementById('scanErr').innerHTML='';
   show('scan');navSel(0);renderStrip();
 }
-function openApp(){document.getElementById('b_cancelAdd').style.display='none';show('home');navSel(1);renderHome();}
-function closePw(){show(S.meals.length||true?'home':'home');navSel(1);}
-function showPw(){show('pw');renderPayState();}
+function openApp(){show('home');navSel(1);renderHome();}
+/* Fermer l'écran Premium ramène là où on était. */
+function closePw(){
+  var b=S.pwBack||'home';
+  if(b==='set')return showSet(); if(b==='wt')return showWeight(); if(b==='vet')return showVet(); if(b==='scan')return showScan();
+  showHome();
+}
+/* Le sous-titre de l'écran Premium dit pourquoi on y arrive. */
+var PW_WHY={
+  scans:["Tes scans gratuits sont utilisés.","You've used your free scans."],
+  chat:["Tes questions gratuites sont utilisées.","You've used your free questions."],
+  pets:["Suis plusieurs animaux avec Premium.","Track several pets with Premium."],
+  report:["Le rapport vétérinaire fait partie de Premium.","The vet report is part of Premium."],
+  upsell:["Tout Scoopy, sans limite.","All of Scoopy, no limits."]
+};
+function showPw(why){S.pwWhy=PW_WHY[why]?why:'upsell'; if(S.screen!=='pw')S.pwBack=S.screen; show('pw');renderPayState();}
 function pickPlan(p){S.plan=p;
   document.getElementById('p_year').className='plan'+(p==='year'?' sel':'');
   document.getElementById('p_mon').className='plan'+(p==='mon'?' sel':'');}
@@ -697,9 +877,9 @@ function afterPurchase(){
           showHome();
         } else if(tries<5){ setTimeout(poll,2500); }
         else {
-          /* le paiement est passé mais la synchro tarde : on débloque,
-             la revalidation quotidienne confirmera. */
-          S.premium=true;save();showHome();
+          /* la synchro tarde : on ne débloque pas à l'aveugle, l'utilisateur
+             peut réessayer avec « Restaurer mon abonnement ». */
+          alert(fr?'Paiement reçu ? La confirmation tarde : touche « Restaurer mon abonnement » dans les réglages dans une minute.':'Payment made? Confirmation is slow: tap "Restore my subscription" in settings in a minute.');
         }
       })
       .catch(function(){ if(tries<5)setTimeout(poll,2500); });
@@ -716,9 +896,8 @@ function renderPayState(){
   var py=document.getElementById('p_year'), pm=document.getElementById('p_mon');
   if(py) py.style.display = PAY_OFF?'none':'block';
   if(pm) pm.style.display = PAY_OFF?'none':'block';
-  var sub=document.getElementById('t_pwS');
-  if(sub&&PAY_OFF) sub.textContent = S.lang==='fr'
-    ? 'Tes scans gratuits sont utilisés.' : 'You have used your free scans.';
+  var sub=document.getElementById('pwWhy');
+  if(sub) sub.textContent = PW_WHY[S.pwWhy||'upsell'][L()];
   var a=document.getElementById('mailBtn');
   if(a){
     var fr=S.lang==='fr';
@@ -769,9 +948,16 @@ function stripeCheckout(){
 /* Retour depuis Stripe : ?paid=1 dans l'URL → on confirme auprès du serveur. */
 function checkReturn(){
   if(location.search.indexOf('paid=1')<0) return;
+  var m=location.search.match(/[?&]session_id=([^&]+)/);
   history.replaceState({}, '', location.pathname);
-  if(S.email) afterPurchase();
-  else { S.premium=true; save(); showHome(); }
+  if(!m){ if(S.email) afterPurchase(); return; }
+  fetch('/api/verify?session_id='+m[1]).then(function(r){return r.json();}).then(function(j){
+    if(j.premium===true){
+      if(j.email)S.email=String(j.email).toLowerCase();
+      S.premium=true;S.lastCheck=Date.now();save();showHome();
+      alert(S.lang==='fr'?'Merci ! Ton abonnement Scoopy Premium est actif.':'Thank you! Your Scoopy Premium subscription is active.');
+    } else if(S.email) afterPurchase();
+  }).catch(function(){ if(S.email) afterPurchase(); });
 }
 /* L'email est l'identifiant du compte : il permet de restaurer l'abonnement
    sur un autre téléphone. On ne le demande qu'une fois. */
@@ -885,6 +1071,9 @@ function pick(field,val,el){
 }
 
 /* ============ MOTEUR NUTRITIONNEL (formules vétérinaires réelles) ============ */
+function dec(v){return String(v).replace('.',S.lang==='fr'?',':'.');}
+function num(v){return parseFloat(String(v==null?'':v).replace(',','.').replace(/\s/g,''));}
+function okWeight(kg){return kg>=0.2&&kg<=150;}
 function rer(kg){return 70*Math.pow(kg,0.75);}          // Resting Energy Requirement
 function factor(){
   var f;
@@ -907,16 +1096,51 @@ function computeTarget(){
   S.target=Math.round(rer(base)*factor());
   return S.target;
 }
+function next1(){
+  if(!S.species){alert(S.lang==='fr'?'Choisis chien ou chat.':'Pick dog or cat.');return;}
+  go('s2');
+}
+/* Pré-sélectionne une pastille d'après sa valeur (onclick="pick('act','norm',this)"). */
+function setChips(id,val){
+  var c=document.getElementById(id).children;
+  for(var j=0;j<c.length;j++)c[j].className='chip'+((c[j].getAttribute('onclick')||'').indexOf("'"+val+"'")>=0?' sel':'');
+}
+function fillOnb(){
+  document.getElementById('i_name').value=S.name||'';
+  document.getElementById('i_w').value=S.w?String(S.w).replace('.',S.lang==='fr'?',':'.'):'';
+  document.getElementById('i_age').value=S.age||S.age===0?String(S.age).replace('.',S.lang==='fr'?',':'.'):'';
+  document.getElementById('sp_dog').className=S.species==='dog'?'sel':'';
+  document.getElementById('sp_cat').className=S.species==='cat'?'sel':'';
+  setChips('c_ster',S.ster); setChips('c_act',S.act); setChips('c_goal',S.goal);
+}
+/* Modifier le profil de l'animal affiché : même questionnaire, déjà rempli. */
+function editPet(){
+  syncPet(); S.editing=true; fillOnb();
+  document.getElementById('b_cancelAdd').style.display='';
+  document.getElementById('b_back1').style.display='none';
+  show('s1');
+}
 function finishOnb(){
   S.name=(document.getElementById('i_name').value||'').trim()||(S.lang==='fr'?'Mon animal':'My pet');
-  S.w=parseFloat(document.getElementById('i_w').value)||0;
-  S.age=parseFloat(document.getElementById('i_age').value)||3;
+  S.w=num(document.getElementById('i_w').value)||0;
+  var age=num(document.getElementById('i_age').value);
+  S.age=(age>=0&&age<=30)?age:3;
   if(!S.species){alert(S.lang==='fr'?'Choisis chien ou chat.':'Pick dog or cat.');return show('s1');}
-  if(!S.w){alert(S.lang==='fr'?'Indique son poids.':'Enter their weight.');return;}
-  if(!S.ster)S.ster='y';
+  if(!okWeight(S.w)){alert(S.lang==='fr'?'Indique un poids valide en kg (ex. 12,5).':'Enter a valid weight in kg (e.g. 12.5).');return;}
+  /* on ne met jamais un chiot ou un chaton au régime */
+  if(S.age<1&&S.goal==='loss')S.goal='keep';
+  if(!S.ster){alert(S.lang==='fr'?'Indique s\'il est stérilisé.':'Tell us if they are neutered.');return;}
   computeTarget();
-  S.weights=[{d:Date.now(),kg:S.w}];
-  if(S.adding){S.adding=false;S.cur=S.pets.length;S.meals=[];S.msgs=[];}
+  if(S.editing){
+    S.editing=false;
+    var last=S.weights.length?S.weights[S.weights.length-1].kg:0;
+    if(last!==S.w)S.weights.push({d:Date.now(),kg:S.w});
+  } else {
+    S.weights=[{d:Date.now(),kg:S.w}];
+    if(S.adding){S.adding=false;S.cur=S.pets.length;S.meals=[];S.msgs=[];}
+  }
+  document.getElementById('b_cancelAdd').style.display='none';
+  document.getElementById('b_back1').style.display='';
   save();
   document.getElementById('o_kcal').textContent=S.target;
   var r=Math.round(rer(S.w)), f=factor().toFixed(2);
@@ -934,35 +1158,42 @@ function finishOnb(){
 function eaten(){var t=0;for(var i=0;i<S.meals.length;i++)t+=S.meals[i].kcal;return Math.round(t);}
 function renderHome(){
   if(!S.target)return;
-  var e=eaten(), left=Math.max(0,S.target-e), pct=Math.min(1,e/S.target);
-  document.getElementById('r_left').textContent=left;
-  document.getElementById('arc').setAttribute('stroke-dashoffset',553-553*pct);
+  var e=eaten(), left=S.target-e, pct=Math.min(1,e/S.target), fr=S.lang==='fr';
+  document.getElementById('r_left').textContent=left>=0?left:'+'+(-left);
+  document.getElementById('t_left').textContent=left>=0?T.t_left[L()]:(fr?'kcal en trop':'kcal over');
+  document.getElementById('ring').className='ring'+(left<0?' over':'');
+  document.getElementById('arc').setAttribute('stroke-dashoffset',578-578*pct);
   document.getElementById('st_eat').textContent=e;
   document.getElementById('st_tgt').textContent=S.target;
-  document.getElementById('st_w').textContent=S.w?S.w+' kg':'—';
+  document.getElementById('st_w').textContent=S.w?dec(S.w)+' kg':'—';
   renderPetBar();
   var d=new Date();
   document.getElementById('h_date').textContent=d.toLocaleDateString(S.lang==='fr'?'fr-FR':'en-US',{weekday:'long',day:'numeric',month:'long'});
   var h='';
   for(var i=0;i<S.meals.length;i++){var m=S.meals[i];
-    h+='<div class="meal">'+(m.img?'<img src="'+m.img+'">':'<div style="width:48px;height:48px;border-radius:10px;background:var(--surface2);display:flex;align-items:center;justify-content:center;font-size:22px">🍽️</div>')+
+    h+='<div class="meal">'+(m.img?'<img src="'+esc(m.img)+'" alt="">':'<div class="ph0">🍽️</div>')+
       '<div class="m1"><b>'+esc(m.title)+'</b><span>'+esc(m.detail||'')+'</span></div>'+
-      '<div class="kc">'+Math.round(m.kcal)+'</div>'+
-      '<button class="del" onclick="delMeal('+i+')">✕</button></div>';
+      '<div class="kc">'+Math.round(m.kcal)+'<small>kcal</small></div>'+
+      '<button class="del" onclick="delMeal('+i+')" aria-label="'+(fr?'Supprimer':'Delete')+'"><svg class="i"><use href="#i-trash"/></svg></button></div>';
   }
   document.getElementById('meals').innerHTML=h;
-  document.getElementById('t_empty').style.display=S.meals.length?'none':'block';
-  var up=document.getElementById('upsell'); if(up)up.style.display=S.premium?'none':'block';
+  document.getElementById('emptyBox').style.display=S.meals.length?'none':'block';
+  var n=S.meals.length;
+  document.getElementById('h_count').textContent=n?(n+(fr?(n>1?' repas':' repas'):(n>1?' meals':' meal'))):'';
+  var up=document.getElementById('upsell'); if(up)up.style.display=S.premium?'none':'flex';
   drawChart(); renderPet();
 }
 function petEmoji(sp){return sp==='cat'?'🐈':'🐕';}
 function renderPetBar(){
   var el=document.getElementById('petBar'); if(!el)return;
+  /* un seul animal : son nom est déjà en haut, on n'affiche pas de sélecteur */
+  if(S.pets.length<2){el.innerHTML='';el.style.display='none';return;}
+  el.style.display='';
   var h='';
   for(var i=0;i<S.pets.length;i++){
-    h+='<div class="chip'+(i===S.cur?' sel':'')+'" onclick="switchPet('+i+')">'+petEmoji(S.pets[i].species)+' '+esc(S.pets[i].name)+'</div>';
+    h+='<div class="chip'+(i===S.cur?' sel':'')+'" role="button" tabindex="0" onclick="switchPet('+i+')">'+petEmoji(S.pets[i].species)+' '+esc(S.pets[i].name)+'</div>';
   }
-  h+='<div class="chip" onclick="addPet()" title="'+T.t_addPet[L()]+'">＋ '+T.t_addPet[L()]+'</div>';
+  h+='<div class="chip add" role="button" tabindex="0" onclick="addPet()">＋ '+T.t_addPet[L()]+'</div>';
   el.innerHTML=h;
 }
 function switchPet(i){
@@ -973,20 +1204,21 @@ function switchPet(i){
 }
 /* Gratuit : un animal. Premium : autant que l'on veut. */
 function addPet(){
-  if(!S.premium&&S.pets.length>=1){showPw();return;}
+  if(!S.premium&&S.pets.length>=1){showPw('pets');return;}
   syncPet(); S.adding=true;
-  S.species=null; S.name=''; S.w=0; S.age=0; S.ster=null; S.act='norm'; S.goal='keep';
+  S.species=null; S.name=''; S.w=0; S.age=''; S.ster=null; S.act='norm'; S.goal='keep';
   S.idealW=0; S.target=0; S.meals=[]; S.weights=[]; S.msgs=[];
-  ['i_name','i_w','i_age'].forEach(function(id){var x=document.getElementById(id);if(x)x.value='';});
-  document.getElementById('sp_dog').className=''; document.getElementById('sp_cat').className='';
-  ['c_ster','c_act','c_goal'].forEach(function(id){var c=document.getElementById(id).children;for(var j=0;j<c.length;j++)c[j].className='chip';});
+  fillOnb();
   document.getElementById('b_cancelAdd').style.display='';
+  document.getElementById('b_back1').style.display='none';
   show('s1');
 }
 function cancelAdd(){
-  S.adding=false; loadPet(S.cur);
+  var wasEdit=S.editing;
+  S.adding=false; S.editing=false; loadPet(S.cur);
   document.getElementById('b_cancelAdd').style.display='none';
-  applyLang(); showHome();
+  document.getElementById('b_back1').style.display='';
+  applyLang(); if(wasEdit)showSet(); else showHome();
 }
 function delPet(){
   if(S.pets.length<2)return;
@@ -998,7 +1230,7 @@ function delPet(){
    Page imprimable ouverte dans un nouvel onglet : « Imprimer → Enregistrer
    en PDF » fonctionne sur iPhone, Android et ordinateur, sans librairie. */
 function vetReport(){
-  if(!S.premium){showPw();return;}
+  if(!S.premium){showPw('report');return;}
   var fr=S.lang==='fr', loc=fr?'fr-FR':'en-US';
   function dt(t){return new Date(t).toLocaleDateString(loc,{day:'numeric',month:'short',year:'numeric'});}
   var ws=(S.weights||[]).slice().sort(function(a,b){return a.d-b.d;});
@@ -1053,9 +1285,13 @@ function vetReport(){
   w.document.open(); w.document.write(h); w.document.close();
 }
 function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
-function delMeal(i){S.meals.splice(i,1);save();renderHome();}
+function delMeal(i){
+  var m=S.meals[i]; if(!m)return;
+  if(!confirm((S.lang==='fr'?'Retirer « ':'Remove "')+m.title+(S.lang==='fr'?' » du journal ?':'" from the log?')))return;
+  S.meals.splice(i,1);save();renderHome();
+}
 function renderSub(){
-  var gp=document.getElementById('goPremium'); if(gp)gp.style.display=S.premium?'none':'block';
+  var gp=document.getElementById('goPremium'); if(gp)gp.style.display=S.premium?'none':'flex';
   var el=document.getElementById('o_sub'); if(!el)return;
   var fr=S.lang==='fr';
   el.innerHTML = S.premium
@@ -1064,17 +1300,19 @@ function renderSub(){
 }
 function renderPet(){
   renderSub();
-  var dp=document.getElementById('b_delPet'); if(dp)dp.style.display=S.pets.length>1?'block':'none';
+  var dp=document.getElementById('b_delPet'); if(dp)dp.style.display=S.pets.length>1?'flex':'none';
   var el=document.getElementById('o_pet'); if(!el||!S.name)return;
   var fr=S.lang==='fr';
-  el.innerHTML=S.name+' · '+(S.species==='dog'?(fr?'chien':'dog'):(fr?'chat':'cat'))+' · '+S.w+' kg · '+S.age+(fr?' ans':' y')+'<br>'+
+  el.innerHTML='<b style="color:var(--text);font-size:16px">'+esc(S.name)+'</b><br>'+
+    (S.species==='dog'?(fr?'Chien':'Dog'):(fr?'Chat':'Cat'))+' · '+String(S.w).replace('.',fr?',':'.')+' kg · '+String(S.age).replace('.',fr?',':'.')+(fr?' ans':' y')+'<br>'+
     (fr?'Objectif : ':'Target: ')+S.target+' kcal/'+(fr?'jour':'day');
 }
 
 /* ============ POIDS + GRAPHIQUE ============ */
 function addWeight(){
-  var v=parseFloat(document.getElementById('i_newW').value);
-  if(!v)return; S.weights.push({d:Date.now(),kg:v}); S.w=v; computeTarget();
+  var v=num(document.getElementById('i_newW').value);
+  if(!okWeight(v)){alert(S.lang==='fr'?'Poids invalide (en kg, ex. 12,5).':'Invalid weight (kg, e.g. 12.5).');return;}
+  S.weights.push({d:Date.now(),kg:v}); S.w=v; computeTarget();
   document.getElementById('i_newW').value=''; save(); drawChart(); renderHome();
 }
 function drawChart(){
@@ -1082,20 +1320,34 @@ function drawChart(){
   var W=S.weights; var fr=S.lang==='fr';
   if(W.length<2){c.innerHTML='<p class="small" style="margin:0">'+(fr?'Ajoute une deuxième pesée pour voir la courbe. Une pesée par semaine suffit.':'Add a second weigh-in to see the curve. Once a week is enough.')+'</p>';}
   else{
-    var vals=W.map(function(x){return x.kg;});
+    var ws=W.slice().sort(function(a,b){return a.d-b.d;});
+    var vals=ws.map(function(x){return x.kg;});
     var mn=Math.min.apply(null,vals),mx=Math.max.apply(null,vals);
     if(mx-mn<0.5){mn-=0.5;mx+=0.5;}
-    var w=340,h=110,p=8,pts=[];
-    for(var i=0;i<W.length;i++){
-      var x=p+(w-2*p)*(W.length===1?0:i/(W.length-1));
-      var y=h-p-(h-2*p)*((W[i].kg-mn)/(mx-mn));
-      pts.push(x.toFixed(1)+','+y.toFixed(1));
+    var pad=(mx-mn)*0.15; mn-=pad; mx+=pad;
+    var w=340,h=150,l=34,r=10,t=10,bt=22,t0=ws[0].d,t1=ws[ws.length-1].d,pts=[];
+    for(var i=0;i<ws.length;i++){
+      var x=l+(w-l-r)*(t1>t0?(ws[i].d-t0)/(t1-t0):i/(ws.length-1));
+      var y=t+(h-t-bt)*(1-(ws[i].kg-mn)/(mx-mn));
+      pts.push([x,y]);
     }
-    c.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:110px;overflow:visible">'+
-      '<polyline points="'+pts.join(' ')+'" fill="none" stroke="#FF7A45" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>'+
-      pts.map(function(pt){var a=pt.split(',');return '<circle cx="'+a[0]+'" cy="'+a[1]+'" r="3.5" fill="#FF7A45"/>';}).join('')+
-      '</svg><div class="small" style="display:flex;justify-content:space-between;margin-top:6px">'+
-      '<span>'+vals[0]+' kg</span><span>'+vals[vals.length-1]+' kg</span></div>';
+    var line=pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' ');
+    var area='M'+pts[0][0].toFixed(1)+','+(h-bt)+' L'+line.split(' ').join(' L')+' L'+pts[pts.length-1][0].toFixed(1)+','+(h-bt)+' Z';
+    var loc=fr?'fr-FR':'en-US', d=function(t){return new Date(t).toLocaleDateString(loc,{day:'numeric',month:'short'});};
+    var f1=function(v){return v.toFixed(1).replace('.',fr?',':'.');};
+    var gy=[0,0.5,1].map(function(k){var y=t+(h-t-bt)*k, v=mx-(mx-mn)*k;
+      return '<line class="grid" x1="'+l+'" x2="'+(w-r)+'" y1="'+y.toFixed(1)+'" y2="'+y.toFixed(1)+'" stroke-dasharray="3 4"/>'+
+             '<text x="0" y="'+(y+4).toFixed(1)+'">'+f1(v)+'</text>';}).join('');
+    c.innerHTML='<svg viewBox="0 0 '+w+' '+h+'" style="width:100%;height:auto;display:block;overflow:visible">'+
+      '<defs><linearGradient id="wa" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF6B3D" stop-opacity=".28"/><stop offset="1" stop-color="#FF6B3D" stop-opacity="0"/></linearGradient></defs>'+
+      gy+'<path d="'+area+'" fill="url(#wa)"/>'+
+      '<polyline points="'+line+'" fill="none" stroke="url(#rg)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>'+
+      pts.map(function(p,i){return '<circle cx="'+p[0].toFixed(1)+'" cy="'+p[1].toFixed(1)+'" r="'+(i===pts.length-1?5:3.5)+'" fill="'+(i===pts.length-1?'#F2512A':'#FF8A4D')+'" stroke="var(--surface)" stroke-width="2"/>';}).join('')+
+      '<text x="'+l+'" y="'+(h-4)+'">'+d(ws[0].d)+'</text>'+
+      '<text x="'+(w-r)+'" y="'+(h-4)+'" text-anchor="end">'+d(ws[ws.length-1].d)+'</text>'+
+      '</svg>'+
+      '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:10px">'+
+      '<span class="small">'+(fr?'Dernière pesée':'Latest')+'</span><b style="font-size:20px">'+f1(vals[vals.length-1])+' kg</b></div>';
   }
   var pr=document.getElementById('o_proj');
   if(pr){
@@ -1128,7 +1380,10 @@ function loadImg(ev){
         var mx=900,sc=Math.min(1,mx/Math.max(img.width,img.height));
         var cv=document.createElement('canvas');cv.width=Math.round(img.width*sc);cv.height=Math.round(img.height*sc);
         cv.getContext('2d').drawImage(img,0,0,cv.width,cv.height);
-        S.imgs.push({data:cv.toDataURL('image/jpeg',0.8).split(',')[1],mime:'image/jpeg'});
+        var tc=document.createElement('canvas'),ts=Math.min(1,112/Math.max(img.width,img.height));
+        tc.width=Math.round(img.width*ts);tc.height=Math.round(img.height*ts);
+        tc.getContext('2d').drawImage(img,0,0,tc.width,tc.height);
+        S.imgs.push({data:cv.toDataURL('image/jpeg',0.8).split(',')[1],mime:'image/jpeg',thumb:tc.toDataURL('image/jpeg',0.7)});
         if(--pending===0) renderStrip();
       };
       img.onerror=function(){ if(--pending===0) renderStrip(); };
@@ -1156,7 +1411,7 @@ function renderStrip(){
     d.className=''; d.style.pointerEvents='auto'; d.style.opacity='1';
     t.textContent=T.t_take[L()];
   }
-  document.getElementById('analyzeBtn').disabled=!S.imgs.length;
+  var ab=document.getElementById('analyzeBtn'); ab.disabled=!S.imgs.length; ab.style.display='';
   renderFreeLeft();
 }
 function delImg(i){S.imgs.splice(i,1);renderStrip();}
@@ -1226,16 +1481,16 @@ var PROMPTS={
 };
 function addManualMeal(){
   var n=(document.getElementById('i_mName').value||'').trim();
-  var k=parseFloat(document.getElementById('i_mKcal').value);
-  if(!n||!k)return;
-  S.meals.push({title:n,kcal:k,detail:'',img:null});
+  var k=num(document.getElementById('i_mKcal').value);
+  if(!n||!(k>0&&k<10000))return;
+  S.meals.push({title:n,kcal:Math.round(k),detail:'',img:null});
   document.getElementById('i_mName').value='';document.getElementById('i_mKcal').value='';
   save();showHome();
 }
 function analyze(){
   var fr=S.lang==='fr';
   if(!S.imgs.length)return;
-  if(!S.premium&&S.scans>=FREE_SCANS){showPw();return;}
+  if(!S.premium&&S.scans>=FREE_SCANS){showPw('scans');return;}
   var b=document.getElementById('analyzeBtn');
   b.disabled=true;b.innerHTML='<span class="spin"></span>'+(fr?'Analyse en cours...':'Analyzing...');
   document.getElementById('scanErr').innerHTML='';
@@ -1243,6 +1498,7 @@ function analyze(){
     var j=parseJSON(txt);
     if(!j)throw new Error('bad json');
     S.scans++; save(); renderFreeLeft(); renderResult(j);
+    b.style.display='none';   // le résultat est affiché : pas de second scan par erreur
   }).catch(function(e){
     if(e&&e.needKey){
       show('set');
@@ -1261,7 +1517,7 @@ function parseJSON(t){
 }
 function callProxy(prompt){
   return fetch('/api/analyze',{method:'POST',headers:{'Content-Type':'application/json'},
-    body:JSON.stringify({prompt:prompt,images:S.imgs})})
+    body:JSON.stringify({prompt:prompt,images:S.imgs.map(function(x){return {data:x.data,mime:x.mime};})})})
   .then(function(r){
     if(r.status===404||r.status===405)throw {noProxy:true};
     return r.json().then(function(j){
@@ -1335,7 +1591,7 @@ function renderMsgs(){
   for(var i=0;i<S.msgs.length;i++){
     var x=S.msgs[i]; if(!x||!x.text)continue;
     var cls=x.role==='me'?'me':x.role==='sys'?'sys':'bot';
-    h+='<div class="msg '+cls+'">'+fmt(x.text)+'</div>';
+    h+='<div class="msg '+cls+'">'+(cls==='sys'?esc(T.t_vetHello[L()]):fmt(x.text))+'</div>';
   }
   if(ASKING) h+='<div class="msg bot" id="typing"><span class="spin"></span></div>';
   m.innerHTML=h; m.scrollTop=m.scrollHeight;
@@ -1364,7 +1620,7 @@ function ask(){
   var fr=S.lang==='fr';
   var t=document.getElementById('i_ask'), q=(t.value||'').trim();
   if(!q)return;
-  if(!S.premium && chatLeft()<=0){ showPw(); return; }
+  if(!S.premium && chatLeft()<=0){ showPw('chat'); return; }
   document.getElementById('askErr').innerHTML='';
   S.msgs.push({role:'me',text:q});
   t.value=''; growAsk(t);
@@ -1444,7 +1700,7 @@ function askDirect(q,hist){
 }
 
 /* ============ PARTAGE DU RÉSULTAT (image) ============ */
-var LAST_SHARE=null;
+var LAST_SHARE=null, PENDING=null;
 function rr(c,x,y,w,h,r){c.beginPath();c.moveTo(x+r,y);c.arcTo(x+w,y,x+w,y+h,r);
   c.arcTo(x+w,y+h,x,y+h,r);c.arcTo(x,y+h,x,y,r);c.arcTo(x,y,x+w,y,r);c.closePath();}
 function wrapText(c,txt,x,y,max,lh,lines){
@@ -1464,6 +1720,15 @@ function wrapText(c,txt,x,y,max,lh,lines){
   c.fillText(line,x,y+n*lh);
   return y+(n+1)*lh;
 }
+/* Le logo (patte au-dessus d'une gamelle), dessiné en blanc dans un carré de côté s. */
+function drawPawBowl(x,ox,oy,s){
+  var k=s/64; x.save(); x.translate(ox,oy); x.scale(k,k); x.fillStyle='#fff';
+  x.beginPath(); x.ellipse(32,32.5,8.6,6.6,0,0,7); x.fill();
+  [[20.5,24.5,3.7],[26.6,18.8,3.9],[37.4,18.8,3.9],[43.5,24.5,3.7]].forEach(function(c){x.beginPath();x.arc(c[0],c[1],c[2],0,7);x.fill();});
+  rr(x,11,36,42,5.2,2.6); x.fill();
+  x.beginPath(); x.moveTo(14,41.2); x.lineTo(50,41.2); x.bezierCurveTo(48.7,48.6,41.8,53,32,53); x.bezierCurveTo(22.2,53,15.3,48.6,14,41.2); x.fill();
+  x.restore();
+}
 function shareCanvas(d){
   var W=1080,H=1350,c=document.createElement('canvas');c.width=W;c.height=H;
   var x=c.getContext('2d');
@@ -1475,10 +1740,9 @@ function shareCanvas(d){
 
   // logo
   var lg=x.createLinearGradient(80,80,180,180);
-  lg.addColorStop(0,'#FFB020');lg.addColorStop(1,'#FF6A3D');
+  lg.addColorStop(0,'#FFB547');lg.addColorStop(1,'#F2512A');
   x.fillStyle=lg; rr(x,80,80,88,88,26); x.fill();
-  x.fillStyle='#160B04';x.font='700 52px '+F;x.textAlign='center';x.textBaseline='middle';
-  x.fillText('P',124,126);
+  drawPawBowl(x,80,80,88);
   x.textAlign='left';x.textBaseline='alphabetic';
   x.fillStyle='#F2F4F7';x.font='700 44px '+F;x.fillText('Scoopy',192,140);
 
@@ -1536,7 +1800,7 @@ function shareResult(){
   },'image/png');
 }
 function shareBtn(){
-  return '<button class="btn sm" style="background:var(--surface2);color:var(--text);border:1px solid var(--line)" onclick="shareResult()">↗ '+T.t_share[L()]+'</button>';
+  return '<button class="btn ghost sm" style="margin-top:10px" onclick="shareResult()"><svg class="i"><use href="#i-share"/></svg>'+T.t_share[L()]+'</button>';
 }
 
 /* ============ AFFICHAGE DU RÉSULTAT ============ */
@@ -1600,7 +1864,7 @@ function renderResult(j){
       (obs?'<div class="sect">'+(fr?'Ce que montrent les photos':'What the photos show')+'</div>'+obs:'')+
       (j.ideal_weight_kg?'<div class="sect">'+(fr?'Objectif de poids':'Weight goal')+'</div>'+
         '<div class="kv"><span>'+(fr?'Poids actuel':'Current weight')+'</span><b>'+S.w+' kg</b></div>'+
-        '<div class="kv"><span>'+(fr?'Poids idéal estimé':'Estimated ideal weight')+'</span><b style="color:var(--accent2)">'+(+j.ideal_weight_kg).toFixed(1)+' kg</b></div>'+
+        '<div class="kv"><span>'+(fr?'Poids idéal estimé':'Estimated ideal weight')+'</span><b style="color:var(--accentInk)">'+(+j.ideal_weight_kg).toFixed(1)+' kg</b></div>'+
         (j.delta_kg?'<div class="kv"><span>'+(fr?(+j.delta_kg<0?'À perdre':'À prendre'):(+j.delta_kg<0?'To lose':'To gain'))+'</span><b>'+Math.abs(+j.delta_kg).toFixed(1)+' kg</b></div>':'')+
         (j.weeks_needed?'<div class="kv"><span>'+(fr?'Durée sûre estimée':'Safe timeframe')+'</span><b>'+Math.round(j.weeks_needed)+(fr?' semaines':' weeks')+'</b></div>':'')
         :'')+
@@ -1628,7 +1892,7 @@ function renderResult(j){
       if(j.first_ingredients[q])ing+='<div class="badge">'+(q+1)+'. '+esc(j.first_ingredients[q])+'</div>';
     }
     h='<div class="card"><h2>'+esc(j.title||'')+'</h2>'+
-      '<div style="font-size:42px;font-weight:800;color:var(--accent);letter-spacing:-1.5px">'+g+' g</div>'+
+      '<div class="bignum">'+g+' g</div>'+
       '<div class="small">'+(fr?'par jour — soit '+gm+' g matin et '+gm+' g soir':'per day — that is '+gm+' g morning and '+gm+' g evening')+'</div>'+
       confBadge(j)+
       '<div class="sect">'+(fr?'Ce qu\'on a lu sur le paquet':'What we read on the pack')+'</div>'+
@@ -1637,13 +1901,13 @@ function renderResult(j){
       (an.fat_pct?'<div class="kv"><span>'+(fr?'Matières grasses':'Fat')+'</span><b>'+an.fat_pct+' %</b></div>':'')+
       (an.fibre_pct?'<div class="kv"><span>'+(fr?'Fibres':'Fibre')+'</span><b>'+an.fibre_pct+' %</b></div>':'')+
       (an.moisture_pct?'<div class="kv"><span>'+(fr?'Humidité':'Moisture')+'</span><b>'+an.moisture_pct+' %</b></div>':'')+
-      '<div class="kv"><span>'+(fr?'Objectif de '+S.name:'Target for '+S.name)+'</span><b>'+S.target+' kcal/'+(fr?'j':'d')+'</b></div>'+
+      '<div class="kv"><span>'+esc(fr?'Objectif de '+S.name:'Target for '+S.name)+'</span><b>'+S.target+' kcal/'+(fr?'j':'d')+'</b></div>'+
       (j.pack_days?'<div class="kv"><span>'+(fr?'Ce paquet dure':'This pack lasts')+'</span><b>'+Math.round(j.pack_days)+(fr?' jours':' days')+'</b></div>':'')+
       (ing?'<div class="sect">'+(fr?'Premiers ingrédients':'First ingredients')+'</div>'+ing:'')+
       (j.quality_verdict?'<div class="sect">'+(fr?'Verdict qualité':'Quality verdict')+'</div><p style="margin:0">'+esc(j.quality_verdict)+'</p>':'')+
       (j.vs_label_recommendation?'<div class="hint" style="margin-top:12px">'+esc(j.vs_label_recommendation)+'</div>':'')+
       warnHtml(j.warnings)+adviceHtml(j.advice)+'</div>'+
-      '<button class="btn sm" onclick="addMeal(\''+encodeURIComponent(j.title||'Ration')+'\','+(+j.total_kcal||S.target)+',\''+g+' g\')">'+
+      '<button class="btn sm" onclick="addResult()">'+
         (fr?'Enregistrer la ration du jour':'Log today\'s ration')+'</button>';
     LAST_SHARE={big:String(g),unit:(fr?'grammes par jour':'grams per day'),
       title:j.title||(fr?'Ration quotidienne':'Daily ration'),
@@ -1652,6 +1916,8 @@ function renderResult(j){
             [fr?'Densité':'Energy density',Math.round(j.kcal_per_100g||0)+' kcal/100 g'],
             [fr?'Par repas':'Per meal',gm+' g']],
       badge:(fr?'Calcul vétérinaire NRC/WSAVA':'NRC/WSAVA vet formula'),badgeBg:'#161E2B',badgeFg:'#84CAFF'};
+    PENDING={title:j.title||(fr?'Ration du jour':'Daily ration'),
+      kcal:Math.round(g*(+j.kcal_per_100g||0)/100)||S.target, detail:g+' g'};
     h+=shareBtn();
     document.getElementById('result').innerHTML=h;
     return;
@@ -1669,7 +1935,7 @@ function renderResult(j){
             too_little:fr?'Portion trop petite':'Portion too small'}[j.portion_verdict]||'';
   var adj=Math.round(j.adjust_grams||0);
   h='<div class="card"><h2>'+esc(j.title||(fr?'Repas':'Meal'))+'</h2>'+
-    '<div style="font-size:42px;font-weight:800;color:var(--accent);letter-spacing:-1.5px">'+kcal+' kcal</div>'+
+    '<div class="bignum">'+kcal+' kcal</div>'+
     '<div class="small">'+pct+(fr?' % de son objectif quotidien ('+S.target+' kcal)':'% of the daily target ('+S.target+' kcal)')+'</div>'+
     (vtxt?'<div class="badge '+vcls+'" style="margin-top:8px">'+vtxt+(adj?' — '+(adj<0?(fr?'retire ':'remove '):(fr?'ajoute ':'add '))+Math.abs(adj)+' g':'')+'</div>':'')+
     confBadge(j)+
@@ -1677,7 +1943,7 @@ function renderResult(j){
     macroHtml(j.macros)+
     (j.equivalent?'<div class="hint" style="margin-top:12px">🍔 '+esc(j.equivalent)+'</div>':'')+
     warnHtml(j.warnings)+adviceHtml(j.advice)+'</div>'+
-    '<button class="btn sm" onclick="addMeal(\''+encodeURIComponent(j.title||'Repas')+'\','+kcal+',\'\')">'+
+    '<button class="btn sm" onclick="addResult()">'+
       (fr?'Ajouter au journal':'Add to log')+'</button>';
   LAST_SHARE={big:String(kcal),unit:'kcal',
     title:j.title||(fr?'Repas':'Meal'),
@@ -1687,6 +1953,8 @@ function renderResult(j){
           [fr?'Équivalent':'Equivalent',j.equivalent?String(j.equivalent).slice(0,34):'']],
     badge:vtxt||'',badgeBg:vcls==='bad'?'#2B1618':vcls==='warn'?'#2A2113':'#12211A',
     badgeFg:vcls==='bad'?'#F97066':vcls==='warn'?'#FFB020':'#12B76A'};
+  var grams=0; if(j.items)for(var q2=0;q2<j.items.length;q2++)grams+=+j.items[q2].grams||0;
+  PENDING={title:j.title||(fr?'Repas':'Meal'),kcal:kcal,detail:grams?Math.round(grams)+' g':''};
   h+=shareBtn();
   document.getElementById('result').innerHTML=h;
 }
@@ -1695,9 +1963,11 @@ function applyIdeal(kg){
   alert((S.lang==='fr'?'Objectif recalculé sur son poids idéal ('+S.idealW+' kg) : ':'Target recalculated from ideal weight ('+S.idealW+' kg): ')+S.target+' kcal/'+(S.lang==='fr'?'jour':'day'));
   showHome();
 }
+function addResult(){ if(!PENDING)return; var p=PENDING; PENDING=null; addMeal(p.title,p.kcal,p.detail); }
+/* Le journal ne garde qu'une vignette : une photo entière par repas
+   remplissait le stockage du navigateur et bloquait toute sauvegarde. */
 function addMeal(title,kcal,detail){
-  S.meals.push({title:decodeURIComponent(title),kcal:+kcal||0,detail:detail,
-    img:S.imgs.length?('data:'+S.imgs[0].mime+';base64,'+S.imgs[0].data):null});
+  S.meals.push({title:title,kcal:+kcal||0,detail:detail||'',img:S.imgs.length?S.imgs[0].thumb||null:null});
   clearImgs(); save(); showHome();
 }
 function resetAll(){
@@ -1705,10 +1975,22 @@ function resetAll(){
   Store.clear(); location.href=location.pathname;
 }
 
+/* L'app peut rester ouverte en arrière-plan : au retour, si la date a changé,
+   le journal du jour repart à zéro (comme au chargement). */
+var DAY=today();
+function checkDay(){
+  if(today()===DAY)return; DAY=today();
+  if(!S.target)return;
+  S.meals=[]; save(); renderHome();
+}
+document.addEventListener('visibilitychange',function(){ if(!document.hidden)checkDay(); });
+window.addEventListener('focus',checkDay);
+
 /* ============ INIT ============ */
 (function init(){
   if(location.protocol==='file:'){var kb=document.getElementById('keyBlock');if(kb)kb.style.display='block';}
   var had=restore();
+  S.lang=detectLang();
   applyLang();
   if(had){
     document.getElementById('i_key').value=S.key||'';
